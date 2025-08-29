@@ -100,66 +100,124 @@ import java.util.Objects;
 public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	public static final LinkedList<IClass<?>> QUEUE = new LinkedList<>();
 	public static final HashSet<IClass<?>> EXCLUDE = new HashSet<>();
-	public static final String PRIMITIVE_REAL = "IFJZBCDV";
-	/** 对int的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Integer> INT_TYPE = new ClassInfo<>(int.class);
-	/** 对float的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Float> FLOAT_TYPE = new ClassInfo<>(float.class);
-	/** 对boolean的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Boolean> BOOLEAN_TYPE = new ClassInfo<>(boolean.class);
-	/** 对byte的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Byte> BYTE_TYPE = new ClassInfo<>(byte.class);
-	/** 对short的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Short> SHORT_TYPE = new ClassInfo<>(short.class);
-	/** 对long的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Long> LONG_TYPE = new ClassInfo<>(long.class);
-	/** 对double的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Double> DOUBLE_TYPE = new ClassInfo<>(double.class);
-	/** 对char的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Character> CHAR_TYPE = new ClassInfo<>(char.class);
-	/** 对void的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
-	public static final ClassInfo<Void> VOID_TYPE = new ClassInfo<>(void.class);
-	/** 对{@link Object}的类型标识 */
-	public static final ClassInfo<Object> OBJECT_TYPE = new ClassInfo<>(Object.class);
+
 	private static final Map<Class<?>, ClassInfo<?>> classMap = new HashMap<>();
+
 	private static final String OBJECTTYPEMARK = "Ljava/lang/Object;";
 	private static final String INIT = "<init>";
 	private static final String CINIT = "<clinit>";
+
 	private static final int CLASS_ACCESS_MODIFIERS =
 			Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE |
 					Modifier.FINAL | Modifier.STATIC | Modifier.INTERFACE |
 					Modifier.ABSTRACT | 4096/*synthetic*/ | 8192/*annotation*/ | 16384/*enum*/;
+
 	private static final int METHOD_ACCESS_MODIFIERS =
 			Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE |
 					Modifier.FINAL | Modifier.STATIC | Modifier.NATIVE |
 					Modifier.SYNCHRONIZED | Modifier.STRICT | Modifier.ABSTRACT |
 					128/*varargs*/ | 4096/*synthetic*/;
+
 	private static final int FIELD_ACCESS_MODIFIERS =
 			Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE |
 					Modifier.FINAL | Modifier.STATIC |
 					Modifier.TRANSIENT | Modifier.VOLATILE;
-	@SuppressWarnings("unchecked")
+
+	public static final String PRIMITIVE_REAL = "IFJZBCDV";
+
 	private static final IClass<? extends Throwable>[] EMP_ARR = new IClass[0];
-	final boolean isPrimitive;
-	private final ClassInfo<?> componentType;
-	ClassInfo<? super T> superClass;
-	List<ClassInfo<?>> interfaces;
-	List<Element> elements;
-	Map<String, IField<?>> fieldMap;
-	Map<String, IMethod<?, ?>> methodMap;
-	boolean initialized;
+
 	/**
 	 * 对于非现有类型标识，此字段通常情况下为null，在完成类的创建和加载后应正确设置为产生的类
 	 * <p>作为已有类型的标识符则一定不为空
 	 */
 	private Class<T> clazz;
+
 	private CodeBlock<Void> clinit;
+
 	private String realName;
-	private ClassInfo<T[]> arrayType;	/** 对{@link String}的类型标识 */
+
+	ClassInfo<? super T> superClass;
+	List<ClassInfo<?>> interfaces;
+	List<Element> elements;
+
+	Map<String, IField<?>> fieldMap;
+	Map<String, IMethod<?, ?>> methodMap;
+
+	private ClassInfo<T[]> arrayType;
+	private final ClassInfo<?> componentType;
+
+	private AnnotationType<? extends Annotation> annotationType;
+
+	/** 对int的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Integer> INT_TYPE = new ClassInfo<>(int.class);
+
+	/** 对float的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Float> FLOAT_TYPE = new ClassInfo<>(float.class);
+
+	/** 对boolean的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Boolean> BOOLEAN_TYPE = new ClassInfo<>(boolean.class);
+
+	/** 对byte的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Byte> BYTE_TYPE = new ClassInfo<>(byte.class);
+
+	/** 对short的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Short> SHORT_TYPE = new ClassInfo<>(short.class);
+
+	/** 对long的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Long> LONG_TYPE = new ClassInfo<>(long.class);
+
+	/** 对double的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Double> DOUBLE_TYPE = new ClassInfo<>(double.class);
+
+	/** 对char的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Character> CHAR_TYPE = new ClassInfo<>(char.class);
+
+	/** 对void的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	public static final ClassInfo<Void> VOID_TYPE = new ClassInfo<>(void.class);
+
+	/** 对{@link Object}的类型标识 */
+	public static final ClassInfo<Object> OBJECT_TYPE = new ClassInfo<>(Object.class);
+
+	/** 对{@link String}的类型标识 */
 	public static final ClassInfo<String> STRING_TYPE = asType(String.class);
-	private AnnotationType<? extends Annotation> annotationType;	/** 对{@link Class}的类型标识 */
+
+	/** 对{@link Class}的类型标识 */
 	@SuppressWarnings("rawtypes")
 	public static final ClassInfo<Class> CLASS_TYPE = asType(Class.class);
+
+	boolean initialized;
+
+	final boolean isPrimitive;
+
+	/**
+	 * 创建一个类型标识用于标记类型，若这个目标类型已经被标记过则会返回那个已有对象标识
+	 *
+	 * @param clazz 要用于标记的类对象
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> ClassInfo<T> asType(Class<T> clazz) {
+		ClassInfo<T> res = (ClassInfo<T>) classMap.get(clazz);
+
+		if (res == null) {
+			res = clazz.isArray() ? new ClassInfo<>(asType(clazz.getComponentType())) : new ClassInfo<>(
+					clazz.getModifiers(),
+					clazz.getName(),
+					clazz.getSuperclass() == null ? null : clazz.getSuperclass().equals(Object.class) ? OBJECT_TYPE : asType(clazz.getSuperclass()),
+					Arrays.stream(clazz.getInterfaces()).map(ClassInfo::asType).toArray(ClassInfo[]::new)
+			);
+			res.clazz = clazz;
+
+			classMap.put(clazz, res);
+
+			if (clazz.isAnnotation())
+				res.asAnnotation(null);
+
+			res.initAnnotations();
+		}
+
+		return res;
+	}
 
 	/**
 	 * 不应该从外部调用此方法，该方法仅用于传入java基础类型的类对象获得其类型标识，若传入的类型不是基本java类型或者{@link Object}则抛出异常
@@ -257,70 +315,6 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 		isPrimitive = false;
 		componentType = comp;
-	}
-
-	/**
-	 * 创建一个类型标识用于标记类型，若这个目标类型已经被标记过则会返回那个已有对象标识
-	 *
-	 * @param clazz 要用于标记的类对象
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> ClassInfo<T> asType(Class<T> clazz) {
-		ClassInfo<T> res = (ClassInfo<T>) classMap.get(clazz);
-
-		if (res == null) {
-			res = clazz.isArray() ? new ClassInfo<>(asType(clazz.getComponentType())) : new ClassInfo<>(
-					clazz.getModifiers(),
-					clazz.getName(),
-					clazz.getSuperclass() == null ? null : clazz.getSuperclass().equals(Object.class) ? OBJECT_TYPE : asType(clazz.getSuperclass()),
-					Arrays.stream(clazz.getInterfaces()).map(ClassInfo::asType).toArray(ClassInfo[]::new)
-			);
-			res.clazz = clazz;
-
-			classMap.put(clazz, res);
-
-			if (clazz.isAnnotation())
-				res.asAnnotation(null);
-
-			res.initAnnotations();
-		}
-
-		return res;
-	}
-
-	private static String pack(String name, IClass<?>... args) {
-		StringBuilder builder = new StringBuilder(name);
-		builder.append("(");
-		for (IClass<?> arg : args) {
-			builder.append(arg.realName());
-			if (arg.realName().length() != 1 || !PRIMITIVE_REAL.contains(arg.realName())) {
-				builder.append(",");
-			}
-		}
-		String type = builder.toString();
-		if (type.endsWith(",")) type = type.substring(0, type.length() - 1);
-
-		return type + ")";
-	}
-
-	/**
-	 * 检查修饰符之间是否存在冲突，以及修饰符是否可用，例如public, protected和private三者只能有其一
-	 *
-	 * @param modifiers 待检查的修饰符
-	 * @param access    可以接收的修饰符位集
-	 * @throws IllegalArgumentException 若修饰符存在冲突或者存在不可接收的修饰符
-	 */
-	private static void checkModifiers(int modifiers, int access) {
-		if (Modifier.isPublic(modifiers) && (modifiers & (Modifier.PROTECTED | Modifier.PRIVATE)) != 0
-				|| Modifier.isProtected(modifiers) && (modifiers & (Modifier.PUBLIC | Modifier.PRIVATE)) != 0
-				|| Modifier.isPrivate(modifiers) && (modifiers & (Modifier.PUBLIC | Modifier.PROTECTED)) != 0
-				|| Modifier.isAbstract(modifiers) && (modifiers & (Modifier.FINAL | Modifier.NATIVE)) != 0
-				|| Modifier.isInterface(modifiers) && (modifiers & Modifier.FINAL) != 0
-				|| Modifier.isFinal(modifiers) && Modifier.isVolatile(modifiers))
-			throw new IllegalArgumentException("modifiers was conflicted， modifiers: " + Modifier.toString(modifiers));
-
-		if ((modifiers & ~access) != 0)
-			throw new IllegalArgumentException("unexpected modifiers with " + Modifier.toString(modifiers));
 	}
 
 	@Override
@@ -550,8 +544,8 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <U> FieldInfo<U> getField(IClass<U> type, String name) {
-		return (FieldInfo<U>) fieldMap.computeIfAbsent(name, e -> {
+	public <TY> FieldInfo<TY> getField(IClass<TY> type, String name) {
+		return (FieldInfo<TY>) fieldMap.computeIfAbsent(name, e -> {
 			if (!isExistedClass())
 				throw new IllegalHandleException("this class info is not a existed type mark, you have to declare field then get it");
 
@@ -562,7 +556,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 				throw new IllegalHandleException(ex);
 			}
 
-			FieldInfo<U> field = new FieldInfo<>(this, flags, name, type, null);
+			FieldInfo<TY> field = new FieldInfo<>(this, flags, name, type, null);
 			type.initAnnotations();
 			return field;
 		});
@@ -603,6 +597,21 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 		}
 
 		return false;
+	}
+
+	private static String pack(String name, IClass<?>... args) {
+		StringBuilder builder = new StringBuilder(name);
+		builder.append("(");
+		for (IClass<?> arg : args) {
+			builder.append(arg.realName());
+			if (arg.realName().length() != 1 || !PRIMITIVE_REAL.contains(arg.realName())) {
+				builder.append(",");
+			}
+		}
+		String type = builder.toString();
+		if (type.endsWith(",")) type = type.substring(0, type.length() - 1);
+
+		return type + ")";
 	}
 
 	/**
@@ -708,6 +717,26 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
+	 * 检查修饰符之间是否存在冲突，以及修饰符是否可用，例如public, protected和private三者只能有其一
+	 *
+	 * @param modifiers 待检查的修饰符
+	 * @param access    可以接收的修饰符位集
+	 * @throws IllegalArgumentException 若修饰符存在冲突或者存在不可接收的修饰符
+	 */
+	private static void checkModifiers(int modifiers, int access) {
+		if (Modifier.isPublic(modifiers) && (modifiers & (Modifier.PROTECTED | Modifier.PRIVATE)) != 0
+				|| Modifier.isProtected(modifiers) && (modifiers & (Modifier.PUBLIC | Modifier.PRIVATE)) != 0
+				|| Modifier.isPrivate(modifiers) && (modifiers & (Modifier.PUBLIC | Modifier.PROTECTED)) != 0
+				|| Modifier.isAbstract(modifiers) && (modifiers & (Modifier.FINAL | Modifier.NATIVE)) != 0
+				|| Modifier.isInterface(modifiers) && (modifiers & Modifier.FINAL) != 0
+				|| Modifier.isFinal(modifiers) && Modifier.isVolatile(modifiers))
+			throw new IllegalArgumentException("modifiers was conflicted， modifiers: " + Modifier.toString(modifiers));
+
+		if ((modifiers & ~access) != 0)
+			throw new IllegalArgumentException("unexpected modifiers with " + Modifier.toString(modifiers));
+	}
+
+	/**
 	 * 检查当前类生成状态，若不处于可修改状态则抛出异常，可修改状态应满足以下条件：
 	 * <ul>
 	 *   <li><strong>此类型标识不是现有类型标识</strong>
@@ -792,8 +821,4 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 		return clazz.getAnnotation(annoClass);
 	}
-
-
-
-
 }

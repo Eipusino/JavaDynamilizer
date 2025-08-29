@@ -15,10 +15,12 @@ public class Parameter<T> extends AnnotatedMember implements AnnotatedElement {
 
 	boolean initialized;
 
-	public Parameter(int modifiers, IClass<T> type, String name) {
-		super(name);
-		setModifiers(modifiers);
-		this.type = type;
+	public void setOwner(IMethod<?, ?> method) {
+		this.method = method;
+	}
+
+	public IMethod<?, ?> owner() {
+		return method;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -53,12 +55,10 @@ public class Parameter<T> extends AnnotatedMember implements AnnotatedElement {
 		return res;
 	}
 
-	public void setOwner(IMethod<?, ?> method) {
-		this.method = method;
-	}
-
-	public IMethod<?, ?> owner() {
-		return method;
+	public Parameter(int modifiers, IClass<T> type, String name) {
+		super(name);
+		setModifiers(modifiers);
+		this.type = type;
 	}
 
 	public IClass<T> getType() {

@@ -1,5 +1,6 @@
 package dynamilize;
 
+@FunctionalInterface
 public interface Function<S, R> {
 	R invoke(DynamicObject<S> self, ArgumentList args);
 
@@ -29,5 +30,4 @@ public interface Function<S, R> {
 	interface NonRetSuperGetFunc<S> {
 		void invoke(DynamicObject<S> self, DataPool.ReadOnlyPool superPointer, ArgumentList args);
 	}
-
 }

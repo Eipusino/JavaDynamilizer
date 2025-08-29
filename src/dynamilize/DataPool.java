@@ -14,13 +14,16 @@ import java.util.Stack;
  *
  * @author EBwilson
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked"})
 public class DataPool {
-	public static final IFunctionEntry[] EMP_METS = new IFunctionEntry[0];
-	public static final IVariable[] EMP_VARS = new IVariable[0];
 	private static final String init = "<init>";
+
 	private static final List<IFunctionEntry> TMP_LIS = new ArrayList<>();
+	public static final IFunctionEntry[] EMP_METS = new IFunctionEntry[0];
+
 	private static final List<IVariable> TMP_VAR = new ArrayList<>();
+	public static final IVariable[] EMP_VARS = new IVariable[0];
+
 	private final DataPool superPool;
 
 	private final Map<String, Map<FunctionType, IFunctionEntry>> funcPool = new HashMap<>();
@@ -194,12 +197,14 @@ public class DataPool {
 	}
 
 	public static class ReadOnlyPool {
-		private static final Stack<ReadOnlyPool> POOLS = new Stack<>();
 		public static int MAX_CHANCES = 2048;
-		private final boolean hold;
+		private static final Stack<ReadOnlyPool> POOLS = new Stack<>();
+
 		private DataPool pool;
 		private DynamicObject<?> owner;
 		private ReadOnlyPool alternative;
+
+		private final boolean hold;
 
 		private ReadOnlyPool() {
 			hold = false;

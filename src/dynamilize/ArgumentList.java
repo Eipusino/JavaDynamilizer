@@ -10,13 +10,10 @@ import java.util.Stack;
  * @author EBwilson
  */
 public class ArgumentList {
-	@SuppressWarnings("unchecked")
-	public static final Stack<Object[]>[] ARG_LEN_MAP = new Stack[64];
-
-	public static final Object[] EMP_ARG = new Object[0];
-	private static final Stack<ArgumentList> INSTANCES = new Stack<>();
-
 	public static int MAX_INSTANCE_STACK = 2048;
+
+	public static final Stack<Object[]>[] ARG_LEN_MAP = new Stack[64];
+	public static final Object[] EMP_ARG = new Object[0];
 
 	static {
 		for (int i = 1; i < ARG_LEN_MAP.length; i++) {
@@ -24,11 +21,14 @@ public class ArgumentList {
 		}
 	}
 
+	private static final Stack<ArgumentList> INSTANCES = new Stack<>();
+
 	private Object[] args;
 	private FunctionType type;
 
 	/** 私有构造器，不允许外部直接使用 */
-	private ArgumentList() {}
+	private ArgumentList() {
+	}
 
 	public static synchronized Object[] getList(int len) {
 		if (len == 0) return EMP_ARG;

@@ -5,33 +5,41 @@ package dynamilize;
  *
  * @author EBwilson
  */
-public interface Calculator<T> {
-	T calculate(T input);
+@FunctionalInterface
+public interface Calculator<Type> {
+	Type calculate(Type input);
 
+	@FunctionalInterface
 	interface BoolCalculator {
 		boolean calculate(boolean input);
 	}
 
+	@FunctionalInterface
 	interface ByteCalculator {
 		byte calculate(byte input);
 	}
 
+	@FunctionalInterface
 	interface ShortCalculator {
 		short calculate(short input);
 	}
 
+	@FunctionalInterface
 	interface IntCalculator {
 		int calculate(int input);
 	}
 
+	@FunctionalInterface
 	interface LongCalculator {
 		long calculate(long input);
 	}
 
+	@FunctionalInterface
 	interface FloatCalculator {
 		float calculate(float input);
 	}
 
+	@FunctionalInterface
 	interface DoubleCalculator {
 		double calculate(double input);
 	}

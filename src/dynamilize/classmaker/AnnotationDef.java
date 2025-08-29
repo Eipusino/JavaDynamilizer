@@ -13,8 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AnnotationDef<A extends Annotation> implements IAnnotation<A> {
-	final AnnotationType<A> annoType;
 	IClass<A> typeClass;
+
+	final AnnotationType<A> annoType;
 	Map<String, Object> pairs;
 
 	A anno;

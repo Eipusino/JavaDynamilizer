@@ -94,43 +94,23 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 
 	protected final ByteClassLoader classLoader;
 	protected final int codeVersion;
-	protected final Map<String, IField<?>> fieldMap = new HashMap<>();
-	protected final Map<String, Object> staticInitial = new HashMap<>();
-	protected final Map<String, Integer> localIndex = new HashMap<>();
-	protected final Map<dynamilize.classmaker.code.Label, Label> labelMap = new HashMap<>();
-	protected final Set<dynamilize.classmaker.code.Label> frameLabels = new HashSet<>();
+
 	protected ClassWriter writer;
+
 	protected MethodVisitor methodVisitor;
 	protected FieldVisitor fieldVisitor;
+
+	protected final Map<String, IField<?>> fieldMap = new HashMap<>();
+	protected final Map<String, Object> staticInitial = new HashMap<>();
+
+	protected final Map<String, Integer> localIndex = new HashMap<>();
+	protected final Map<dynamilize.classmaker.code.Label, Label> labelMap = new HashMap<>();
+
+	protected final Set<dynamilize.classmaker.code.Label> frameLabels = new HashSet<>();
 
 	public ASMGenerator(ByteClassLoader classLoader, int codeVersion) {
 		this.classLoader = classLoader;
 		this.codeVersion = codeVersion;
-	}
-
-	private static int typeSelect(IClass<?> type, int aload, int iload, int lload, int dload, int fload) {
-		return !type.isPrimitive() ? aload :
-				type == ClassInfo.INT_TYPE || type == ClassInfo.BYTE_TYPE
-						|| type == ClassInfo.SHORT_TYPE || type == ClassInfo.BOOLEAN_TYPE
-						|| type == ClassInfo.CHAR_TYPE ? iload :
-						type == ClassInfo.LONG_TYPE ? lload :
-								type == ClassInfo.DOUBLE_TYPE ? dload :
-										type == ClassInfo.FLOAT_TYPE ? fload : -1;
-	}
-
-	protected static char getTypeChar(IClass<?> primitive, boolean foldInt) {
-		if (!primitive.isPrimitive()) return 'A';
-
-		return switch (primitive.realName()) {
-			case "C" -> foldInt ? 'I' : 'C';
-			case "B" -> foldInt ? 'I' : 'B';
-			case "S" -> foldInt ? 'I' : 'S';
-			case "Z", "I" -> 'I';
-			case "J" -> 'L';
-			case "F" -> 'F';
-			case "D" -> 'D';
-			default -> throw new IllegalHandleException("unknown type name " + primitive.realName());
-		};
 	}
 
 	protected void initial() {
@@ -1000,7 +980,16 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 		return typeSelect(type, Opcodes.ALOAD, Opcodes.ILOAD, Opcodes.LLOAD, Opcodes.DLOAD, Opcodes.FLOAD);
 	}
 
-	@SuppressWarnings("rawtypes")
+	private static int typeSelect(IClass<?> type, int aload, int iload, int lload, int dload, int fload) {
+		return !type.isPrimitive() ? aload :
+				type == ClassInfo.INT_TYPE || type == ClassInfo.BYTE_TYPE
+						|| type == ClassInfo.SHORT_TYPE || type == ClassInfo.BOOLEAN_TYPE
+						|| type == ClassInfo.CHAR_TYPE ? iload :
+						type == ClassInfo.LONG_TYPE ? lload :
+								type == ClassInfo.DOUBLE_TYPE ? dload :
+										type == ClassInfo.FLOAT_TYPE ? fload : -1;
+	}
+
 	protected void visitConstant(Object value) {
 		if (value == null) {
 			methodVisitor.visitInsn(Opcodes.ACONST_NULL);
@@ -1025,7 +1014,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 						"TYPE",
 						CLASS_TYPE.realName()
 				);
-			} else methodVisitor.visitLdcInsn(Type.getType(ClassInfo.asType((Class<?>) c).realName()));
+			} else methodVisitor.visitLdcInsn(Type.getType(ClassInfo.asType((Class<?>) value).realName()));
 		} else if (value.getClass().isArray()) {
 			Class<?> componentType = value.getClass().getComponentType();
 
@@ -1267,5 +1256,20 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 				methodDisc,
 				false
 		);
+	}
+
+	protected static char getTypeChar(IClass<?> primitive, boolean foldInt) {
+		if (!primitive.isPrimitive()) return 'A';
+
+		return switch (primitive.realName()) {
+			case "C" -> foldInt ? 'I' : 'C';
+			case "B" -> foldInt ? 'I' : 'B';
+			case "S" -> foldInt ? 'I' : 'S';
+			case "Z", "I" -> 'I';
+			case "J" -> 'L';
+			case "F" -> 'F';
+			case "D" -> 'D';
+			default -> throw new IllegalHandleException("unknown type name " + primitive.realName());
+		};
 	}
 }

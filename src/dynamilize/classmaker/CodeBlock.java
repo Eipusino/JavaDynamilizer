@@ -53,34 +53,55 @@ import static dynamilize.classmaker.ClassInfo.asType;
  * @author EBwilson
  */
 public class CodeBlock<R> implements ICodeBlock<R> {
-	//*=============*//
-	//* utilMethods *//
-	//*=============*//
-	private static final String VAR_DEFAULT = "var&";
-	protected final ArrayList<Element> statements = new ArrayList<>();
-	protected final ArrayList<ILocal<?>> parameter = new ArrayList<>();
-	final List<Label> labelList = new ArrayList<>();
-	final IMethod<?, R> method;
-	Local<?> selfPointer;
-	private int defVarCount = 0;
+	public static class StackElem<T> implements ILocal<T> {
+		private static final HashMap<IClass<?>, StackElem<?>> caching = new HashMap<>();
 
-	public CodeBlock(IMethod<?, R> method) {
-		this.method = method;
+		private final IClass<T> type;
+
+		private StackElem(IClass<T> type) {
+			this.type = type;
+		}
+
+		@SuppressWarnings("unchecked")
+		public static <T> StackElem<T> get(IClass<T> type) {
+			return (StackElem<T>) caching.computeIfAbsent(type, StackElem::new);
+		}
+
+		@Override
+		public String name() {
+			return "<stack>";
+		}
+
+		@Override
+		public int modifiers() {
+			return 0;
+		}
+
+		@Override
+		public IClass<T> type() {
+			return type;
+		}
+
+		@Override
+		public Object initial() {
+			return null;
+		}
 	}
 
 	public static <T> ILocal<T> stack(IClass<T> type) {
 		return StackElem.get(type);
 	}
 
-	private static void checkStack(Element elem, ILocal<?>... accesses) {
-		boolean accessLocal = false;
-		for (ILocal<?> access : accesses) {
-			if (access == null) continue;
+	protected final ArrayList<Element> statements = new ArrayList<>();
 
-			if (access instanceof CodeBlock.StackElem) {
-				if (accessLocal) throw new IllegalHandleException("Bad stack access, element: " + elem);
-			} else accessLocal = true;
-		}
+	protected final ArrayList<ILocal<?>> parameter = new ArrayList<>();
+	Local<?> selfPointer;
+
+	final List<Label> labelList = new ArrayList<>();
+	final IMethod<?, R> method;
+
+	public CodeBlock(IMethod<?, R> method) {
+		this.method = method;
 	}
 
 	protected void initParams(IClass<?> self, List<Parameter<?>> params) {
@@ -118,6 +139,13 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 	public int modifiers() {
 		return 0;
 	}
+
+	//*=============*//
+	//* utilMethods *//
+	//*=============*//
+	private static final String VAR_DEFAULT = "var&";
+
+	private int defVarCount = 0;
 
 	public <T> ILocal<T> local(IClass<T> type, String name, int flags) {
 		ILocal<T> res = new Local<>(name, flags, type);
@@ -411,41 +439,6 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 		codes().add(
 				new Throw<>(throwable)
 		);
-	}
-
-	public static class StackElem<T> implements ILocal<T> {
-		private static final HashMap<IClass<?>, StackElem<?>> caching = new HashMap<>();
-
-		private final IClass<T> type;
-
-		private StackElem(IClass<T> type) {
-			this.type = type;
-		}
-
-		@SuppressWarnings("unchecked")
-		public static <T> StackElem<T> get(IClass<T> type) {
-			return (StackElem<T>) caching.computeIfAbsent(type, StackElem::new);
-		}
-
-		@Override
-		public String name() {
-			return "<stack>";
-		}
-
-		@Override
-		public int modifiers() {
-			return 0;
-		}
-
-		@Override
-		public IClass<T> type() {
-			return type;
-		}
-
-		@Override
-		public Object initial() {
-			return null;
-		}
 	}
 
 	//*===============*//
@@ -1069,6 +1062,17 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 		@Override
 		public ILocal<T> thr() {
 			return thr;
+		}
+	}
+
+	private static void checkStack(Element elem, ILocal<?>... accesses) {
+		boolean accessLocal = false;
+		for (ILocal<?> access : accesses) {
+			if (access == null) continue;
+
+			if (access instanceof CodeBlock.StackElem) {
+				if (accessLocal) throw new IllegalHandleException("Bad stack access, element: " + elem);
+			} else accessLocal = true;
 		}
 	}
 }

@@ -15,7 +15,7 @@ package dynamilize;
  * @author EBwilson
  */
 @SuppressWarnings("unchecked")
-public interface DynamicObject<Self> {
+public interface DynamicObject<S> {
 	/**
 	 * 获取对象的动态类型
 	 * <p>生成器实施应当实现此方法返回生成的动态类型字段
@@ -104,7 +104,7 @@ public interface DynamicObject<Self> {
 		if (entry == null)
 			throw new IllegalHandleException("no such function: " + name + type);
 
-		return a -> (R) entry.<Self, R>getFunction().invoke(this, a);
+		return a -> (R) entry.<S, R>getFunction().invoke(this, a);
 	}
 
 	default <R> Delegate<R> getFunction(String name, Class<?>... types) {
@@ -114,9 +114,9 @@ public interface DynamicObject<Self> {
 		return f;
 	}
 
-	default <R> Function<Self, R> getFunc(String name, Class<?>... types) {
+	default <R> Function<S, R> getFunc(String name, Class<?>... types) {
 		FunctionType type = FunctionType.inst(types);
-		Function<Self, R> f = getFunc(name, type).getFunction();
+		Function<S, R> f = getFunc(name, type).getFunction();
 		type.recycle();
 		return f;
 	}
@@ -131,12 +131,12 @@ public interface DynamicObject<Self> {
 	 * @param func     描述函数行为的匿名函数
 	 * @param argTypes 形式参数的类型列表
 	 */
-	<R> void setFunc(String name, Function<Self, R> func, Class<?>... argTypes);
+	<R> void setFunc(String name, Function<S, R> func, Class<?>... argTypes);
 
-	<R> void setFunc(String name, Function.SuperGetFunction<Self, R> func, Class<?>... argTypes);
+	<R> void setFunc(String name, Function.SuperGetFunction<S, R> func, Class<?>... argTypes);
 
 	/** 与{@link DynamicObject#setFunc(String, Function, Class[])}效果一致，只是传入的函数没有返回值 */
-	default void setFunc(String name, Function.NonRetFunction<Self> func, Class<?>... argTypes) {
+	default void setFunc(String name, Function.NonRetFunction<S> func, Class<?>... argTypes) {
 		setFunc(name, (s, a) -> {
 			func.invoke(s, a);
 			return null;
@@ -144,7 +144,7 @@ public interface DynamicObject<Self> {
 	}
 
 	/** 与{@link DynamicObject#setFunc(String, Function.SuperGetFunction, Class[])}效果一致，只是传入的函数没有返回值 */
-	default void setFunc(String name, Function.NonRetSuperGetFunc<Self> func, Class<?>... argTypes) {
+	default void setFunc(String name, Function.NonRetSuperGetFunc<S> func, Class<?>... argTypes) {
 		setFunc(name, (s, sup, a) -> {
 			func.invoke(s, sup, a);
 			return null;
@@ -189,7 +189,7 @@ public interface DynamicObject<Self> {
 	 */
 	default <R> R invokeFunc(String name, ArgumentList args) {
 		FunctionType type = args.type();
-		Function<Self, R> res = getFunc(name, type).getFunction();
+		Function<S, R> res = getFunc(name, type).getFunction();
 
 		if (res == null)
 			throw new IllegalHandleException("no such method declared: " + name);
@@ -198,7 +198,7 @@ public interface DynamicObject<Self> {
 	}
 
 	/** 将对象自身经过一次强转换并返回 */
-	default <T extends Self> T objSelf() {
+	default <T extends S> T objSelf() {
 		return (T) this;
 	}
 

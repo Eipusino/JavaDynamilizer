@@ -27,10 +27,12 @@ import java.util.WeakHashMap;
  * @since 1.2
  */
 public abstract class ProxyMaker {
-	public static final Class<?>[] EMPTY_CLASSES = new Class[0];
-	public static final Object[] EMPTY_ARGS = new Object[0];
 	private static final Map<DynamicClass, Map<ClassImplements<?>, DynamicClass>> proxyMap = new WeakHashMap<>();
 	private static final Map<ClassImplements<?>, DynamicClass> nonSuperProxy = new HashMap<>();
+
+	public static final Class<?>[] EMPTY_CLASSES = new Class[0];
+	public static final Object[] EMPTY_ARGS = new Object[0];
+
 	protected final DynamicMaker maker;
 
 	protected ProxyMaker(DynamicMaker maker) {
@@ -178,38 +180,6 @@ public abstract class ProxyMaker {
 		throw new RuntimeException(thr);
 	}
 
-	/** 调用封装器，提供了一个方法{@link FuncMarker#invoke(DynamicObject, ArgumentList)}方法来直接调用这个对象封装的方法或者函数 */
-	public interface FuncMarker {
-		default String signature() {
-			return FunctionType.signature(getName(), getType());
-		}
-
-		String getName();
-
-		FunctionType getType();
-
-		Object invoke(DynamicObject<?> self, ArgumentList args);
-
-		default Object invoke(DynamicObject<?> self, Object... args) {
-			ArgumentList lis = ArgumentList.as(args);
-			Object r = invoke(self, lis);
-			lis.type().recycle();
-			lis.recycle();
-			return r;
-		}
-
-		default Object invoke(DynamicObject<?> self, FunctionType type, Object... args) {
-			ArgumentList lis = ArgumentList.asWithType(type, args);
-			Object r = invoke(self, lis);
-			lis.recycle();
-			return r;
-		}
-	}
-
-	public interface ProxyHandler {
-		Object invoke(DynamicObject<?> proxy, FuncMarker func, FuncMarker superFunction, ArgumentList args);
-	}
-
 	public static class FunctionMarker implements FuncMarker {
 		public static int maxPoolSize = 4096;
 
@@ -268,5 +238,37 @@ public abstract class ProxyMaker {
 
 			pool[cursor] = this;
 		}
+	}
+
+	/** 调用封装器，提供了一个方法{@link FuncMarker#invoke(DynamicObject, ArgumentList)}方法来直接调用这个对象封装的方法或者函数 */
+	public interface FuncMarker {
+		default String signature() {
+			return FunctionType.signature(getName(), getType());
+		}
+
+		String getName();
+
+		FunctionType getType();
+
+		Object invoke(DynamicObject<?> self, ArgumentList args);
+
+		default Object invoke(DynamicObject<?> self, Object... args) {
+			ArgumentList lis = ArgumentList.as(args);
+			Object r = invoke(self, lis);
+			lis.type().recycle();
+			lis.recycle();
+			return r;
+		}
+
+		default Object invoke(DynamicObject<?> self, FunctionType type, Object... args) {
+			ArgumentList lis = ArgumentList.asWithType(type, args);
+			Object r = invoke(self, lis);
+			lis.recycle();
+			return r;
+		}
+	}
+
+	public interface ProxyHandler {
+		Object invoke(DynamicObject<?> proxy, FuncMarker func, FuncMarker superFunction, ArgumentList args);
 	}
 }

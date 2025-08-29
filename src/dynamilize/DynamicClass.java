@@ -64,13 +64,6 @@ public class DynamicClass {
 	/** 废弃标记，在类型已废弃后，不可再实例化此类型 */
 	private boolean isObsoleted;
 
-	/** 创建类型实例，不应从外部调用此方法构造实例 */
-	DynamicClass(String name, DynamicClass superDyClass) {
-		this.name = name;
-		this.superDyClass = superDyClass;
-		this.data = new DataPool(superDyClass == null ? null : superDyClass.data);
-	}
-
 	/**
 	 * 声明一个动态类型，如果此名称指明的类型不存在则使用给出的名称创建一个新的动态类
 	 *
@@ -103,6 +96,13 @@ public class DynamicClass {
 		DynamicClass res = superDyClass == null ? get(name) : declare(name, superDyClass);
 		res.visitClass(clazz, helper);
 		return res;
+	}
+
+	/** 创建类型实例，不应从外部调用此方法构造实例 */
+	DynamicClass(String name, DynamicClass superDyClass) {
+		this.name = name;
+		this.superDyClass = superDyClass;
+		this.data = new DataPool(superDyClass == null ? null : superDyClass.data);
 	}
 
 	/**
@@ -338,7 +338,7 @@ public class DynamicClass {
 		}, arg.toArray(new Class[0]));
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked"})
 	private void setVariableWithField(Field field) {
 		Object value;
 		try {

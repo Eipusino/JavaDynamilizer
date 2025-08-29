@@ -73,9 +73,17 @@ import static dynamilize.runtimeannos.FuzzyMatch.Exact.INSTANCE;
  * @see DynamicObject
  * @see DataPool
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "DuplicatedCode"})
 public abstract class DynamicMaker {
 	public static final String CALLSUPER = "$super";
+
+	private static final HashSet<String> INTERNAL_FIELD = new HashSet<>(Arrays.asList(
+			"$dynamic_type$",
+			"$datapool$",
+			"$varValuePool$",
+			"$superbasepointer$"
+	));
+
 	public static final ClassInfo<DynamicClass> DYNAMIC_CLASS_TYPE = asType(DynamicClass.class);
 	public static final ClassInfo<DynamicObject> DYNAMIC_OBJECT_TYPE = asType(DynamicObject.class);
 	public static final ClassInfo<DataPool> DATA_POOL_TYPE = asType(DataPool.class);
@@ -93,6 +101,7 @@ public abstract class DynamicMaker {
 	public static final ClassInfo<ArgumentList> ARG_LIST_TYPE = asType(ArgumentList.class);
 	public static final ClassInfo<Function.SuperGetFunction> SUPER_GET_FUNC_TYPE = ClassInfo.asType(Function.SuperGetFunction.class);
 	public static final ClassInfo<IFunctionEntry> FUNC_ENTRY_TYPE = ClassInfo.asType(IFunctionEntry.class);
+
 	public static final IMethod<DataPool, DataPool.ReadOnlyPool> GET_READER = DATA_POOL_TYPE.getMethod(READONLY_POOL_TYPE, "getReader", DYNAMIC_OBJECT_TYPE);
 	public static final IMethod<HashMap, Object> MAP_GET = HASH_MAP_TYPE.getMethod(OBJECT_TYPE, "get", OBJECT_TYPE);
 	public static final IMethod<HashMap, Object> MAP_GET_DEF = HASH_MAP_TYPE.getMethod(OBJECT_TYPE, "getOrDefault", OBJECT_TYPE, OBJECT_TYPE);
@@ -107,22 +116,17 @@ public abstract class DynamicMaker {
 	public static final IMethod<DynamicObject, Object> INVOKE = DYNAMIC_OBJECT_TYPE.getMethod(OBJECT_TYPE, "invokeFunc", FUNCTION_TYPE_TYPE, STRING_TYPE, OBJECT_TYPE.asArray());
 	public static final IMethod<ArgumentList, Object[]> GET_LIST = ARG_LIST_TYPE.getMethod(OBJECT_TYPE.asArray(), "getList", INT_TYPE);
 	public static final IMethod<ArgumentList, Void> RECYCLE_LIST = ARG_LIST_TYPE.getMethod(VOID_TYPE, "recycleList", OBJECT_TYPE.asArray());
-	public static final ILocal[] LOCALS_EMP = new ILocal[0];
-	public static final HashSet EMP_SET = new HashSet<>();
-	public static final HashMap EMP_MAP = new HashMap<>();
-	public static final String ANY = "ANY";
-	private static final HashSet<String> INTERNAL_FIELD = new HashSet<>(Arrays.asList(
-			"$dynamic_type$",
-			"$datapool$",
-			"$varValuePool$",
-			"$superbasepointer$"
-	));
+
 	private static final Map<String, Set<FunctionType>> OVERRIDES = new HashMap<>();
 	private static final Map<String, Set<FunctionType>> FINALS = new HashMap<>();
 	private static final Map<String, Set<FunctionType>> ABSTRACTS = new HashMap<>();
 	private static final Set<Class<?>> INTERFACE_TEMP = new HashSet<>();
 	private static final Stack<Class<?>> INTERFACE_STACK = new Stack<>();
 	private static final Class[] EMPTY_CLASSES = new Class[0];
+	public static final ILocal[] LOCALS_EMP = new ILocal[0];
+	public static final HashSet EMP_SET = new HashSet<>();
+	public static final HashMap EMP_MAP = new HashMap<>();
+	public static final String ANY = "ANY";
 	private final JavaHandleHelper helper;
 
 	private final HashMap<ClassImplements<?>, Class<?>> classPool = new HashMap<>();
@@ -136,141 +140,6 @@ public abstract class DynamicMaker {
 	 */
 	protected DynamicMaker(JavaHandleHelper helper) {
 		this.helper = helper;
-	}
-
-	private static boolean isInternalField(String name) {
-		return INTERNAL_FIELD.contains(name);
-	}
-
-	/**
-	 * 由基类与接口列表建立动态类的打包名称，打包名称具有唯一性（或者足够高的离散性，不应出现频繁的碰撞）和不变性
-	 *
-	 * @param baseClass  基类
-	 * @param interfaces 接口列表
-	 * @return 由基类名称与全部接口名称的哈希值构成的打包名称
-	 */
-	public static <T> String getDynamicName(Class<T> baseClass, Class<?>... interfaces) {
-		return ensurePackage(baseClass.getName()) + "$dynamic$" + FunctionType.typeNameHash(interfaces);
-	}
-
-	private static String ensurePackage(String name) {
-		if (name.startsWith("java.")) {
-			return name.replaceFirst("java\\.", "lava.");
-		}
-		return name;
-	}
-
-	private static void genCinit(Method method, CodeBlock<Void> clinit, FieldInfo<FunctionType> funType, FieldInfo<HashMap> methodIndex, int callSuperIndex) {
-		String signature = FunctionType.signature(method);
-		clinit.loadConstant(stack(INT_TYPE), method.getParameterCount());
-		clinit.newArray(
-				CLASS_TYPE,
-				stack(CLASS_TYPE.asArray()),
-				stack(INT_TYPE)
-		);
-
-		Class<?>[] paramTypes = method.getParameterTypes();
-		for (int i = 0; i < paramTypes.length; i++) {
-			clinit.assign(stack(CLASS_TYPE.asArray()), stack(CLASS_TYPE.asArray()));
-			clinit.loadConstant(stack(INT_TYPE), i);
-			clinit.loadConstant(stack(CLASS_TYPE), paramTypes[i]);
-
-			clinit.arrayPut(stack(CLASS_TYPE.asArray()), stack(INT_TYPE), stack(CLASS_TYPE));
-		}
-
-		clinit.invoke(
-				null,
-				TYPE_INST,
-				stack(FUNCTION_TYPE_TYPE),
-				stack(CLASS_TYPE.asArray())
-		);
-
-		clinit.assign(null, stack(FUNCTION_TYPE_TYPE), funType);
-
-		if (callSuperIndex == -1) return;
-
-		clinit.assign(null, methodIndex, stack(HASH_MAP_TYPE));
-		clinit.loadConstant(stack(STRING_TYPE), signature);
-
-		clinit.loadConstant(stack(INT_TYPE), callSuperIndex);
-		clinit.invoke(
-				null,
-				VALUE_OF,
-				stack(INTEGER_CLASS_TYPE),
-				stack(INT_TYPE)
-		);
-
-		clinit.invoke(
-				stack(HASH_MAP_TYPE),
-				MAP_PUT,
-				null,
-				stack(OBJECT_TYPE)
-		);
-	}
-
-	@SuppressWarnings("unchecked")
-	private static <T> void invokeProxy(ClassInfo<? extends T> classInfo, Method method, String methodName, ClassInfo<?> returnType, FieldInfo<FunctionType> funType) {
-		CodeBlock<?> code = classInfo.declareMethod(
-				Modifier.PUBLIC,
-				methodName,
-				returnType,
-				Parameter.asParameter(method.getParameters())
-		);
-		AnnotationDef<DynamicMethod> anno = new AnnotationDef<>(
-				ClassInfo.asType(DynamicMethod.class).asAnnotation(EMP_MAP),
-				code.owner(),
-				EMP_MAP
-		);
-		code.owner().addAnnotation(anno);
-
-		code.loadConstant(stack(INT_TYPE), method.getParameterCount());
-		code.invoke(null, GET_LIST, stack(OBJECT_TYPE.asArray()), stack(INT_TYPE));
-
-		if (method.getParameterCount() > 0) {
-			for (int i = 0; i < code.getParamList().size(); i++) {
-				code.assign(stack(OBJECT_TYPE), stack(OBJECT_TYPE.asArray()));
-				code.loadConstant(stack(INT_TYPE), i);
-				code.arrayPut(stack(OBJECT_TYPE.asArray()), stack(INT_TYPE), code.getRealParam(i));
-			}
-		}
-
-		ILocal<Object[]> argList = code.local(OBJECT_TYPE.asArray());
-		code.assign(stack(OBJECT_TYPE.asArray()), argList);
-
-		if (returnType != VOID_TYPE) {
-			code.assign(code.getThis(), stack(classInfo));
-			code.assign(null, funType, stack(FUNCTION_TYPE_TYPE));
-			code.loadConstant(stack(STRING_TYPE), method.getName());
-			code.assign(argList, stack(OBJECT_TYPE.asArray()));
-
-			code.invoke(stack(classInfo), INVOKE, stack(OBJECT_TYPE), stack(OBJECT_TYPE));
-			code.invoke(null, RECYCLE_LIST, null, argList);
-			code.cast(stack(OBJECT_TYPE), stack(returnType));
-			code.returnValue(stack((IClass) returnType));
-		} else {
-			code.assign(code.getThis(), stack(classInfo));
-			code.assign(null, funType, stack(FUNCTION_TYPE_TYPE));
-			code.loadConstant(stack(STRING_TYPE), method.getName());
-			code.assign(argList, stack(OBJECT_TYPE.asArray()));
-
-			code.invoke(stack(classInfo), INVOKE, null, stack(OBJECT_TYPE));
-			code.invoke(null, RECYCLE_LIST, null, argList);
-		}
-	}
-
-	private static boolean filterMethod(Method method) {
-		//对于已经被声明为final的方法将被添加到排除列表
-		if (Modifier.isFinal(method.getModifiers())) {
-			DynamicMaker.FINALS.computeIfAbsent(method.getName(), e -> new HashSet<>()).add(FunctionType.from(method));
-			return false;
-		}
-
-		// 如果方法是静态的，或者方法不对子类可见则不重写此方法
-		if (Modifier.isStatic(method.getModifiers())) return false;
-		if ((method.getModifiers() & (Modifier.PUBLIC | Modifier.PROTECTED)) == 0) return false;
-
-		return !DynamicMaker.FINALS.computeIfAbsent(method.getName(), e -> new HashSet<>()).contains(FunctionType.from(method))
-				&& DynamicMaker.OVERRIDES.computeIfAbsent(method.getName(), e -> new HashSet<>()).add(FunctionType.from(method));
 	}
 
 	public void clearAllCache() {
@@ -502,6 +371,10 @@ public abstract class DynamicMaker {
 		return dynamicClass.genPool(basePool);
 	}
 
+	private static boolean isInternalField(String name) {
+		return INTERNAL_FIELD.contains(name);
+	}
+
 	/**
 	 * 根据委托基类和实现的接口获取生成的动态类型实例的类型，类型会生成并放入池，下一次获取会直接从池中取出该类型
 	 *
@@ -520,6 +393,24 @@ public abstract class DynamicMaker {
 
 			return generateClass(handleBaseClass(base), interfaces, aspects);
 		});
+	}
+
+	/**
+	 * 由基类与接口列表建立动态类的打包名称，打包名称具有唯一性（或者足够高的离散性，不应出现频繁的碰撞）和不变性
+	 *
+	 * @param baseClass  基类
+	 * @param interfaces 接口列表
+	 * @return 由基类名称与全部接口名称的哈希值构成的打包名称
+	 */
+	public static <T> String getDynamicName(Class<T> baseClass, Class<?>... interfaces) {
+		return ensurePackage(baseClass.getName()) + "$dynamic$" + FunctionType.typeNameHash(interfaces);
+	}
+
+	private static String ensurePackage(String name) {
+		if (name.startsWith("java.")) {
+			return name.replaceFirst("java\\.", "lava.");
+		}
+		return name;
 	}
 
 	/**
@@ -1239,6 +1130,119 @@ public abstract class DynamicMaker {
 		code.thr(stack(NOSUCH_METHOD));
 	}
 
+	private static void genCinit(Method method, CodeBlock<Void> clinit, FieldInfo<FunctionType> funType, FieldInfo<HashMap> methodIndex, int callSuperIndex) {
+		String signature = FunctionType.signature(method);
+		clinit.loadConstant(stack(INT_TYPE), method.getParameterCount());
+		clinit.newArray(
+				CLASS_TYPE,
+				stack(CLASS_TYPE.asArray()),
+				stack(INT_TYPE)
+		);
+
+		Class<?>[] paramTypes = method.getParameterTypes();
+		for (int i = 0; i < paramTypes.length; i++) {
+			clinit.assign(stack(CLASS_TYPE.asArray()), stack(CLASS_TYPE.asArray()));
+			clinit.loadConstant(stack(INT_TYPE), i);
+			clinit.loadConstant(stack(CLASS_TYPE), paramTypes[i]);
+
+			clinit.arrayPut(stack(CLASS_TYPE.asArray()), stack(INT_TYPE), stack(CLASS_TYPE));
+		}
+
+		clinit.invoke(
+				null,
+				TYPE_INST,
+				stack(FUNCTION_TYPE_TYPE),
+				stack(CLASS_TYPE.asArray())
+		);
+
+		clinit.assign(null, stack(FUNCTION_TYPE_TYPE), funType);
+
+		if (callSuperIndex == -1) return;
+
+		clinit.assign(null, methodIndex, stack(HASH_MAP_TYPE));
+		clinit.loadConstant(stack(STRING_TYPE), signature);
+
+		clinit.loadConstant(stack(INT_TYPE), callSuperIndex);
+		clinit.invoke(
+				null,
+				VALUE_OF,
+				stack(INTEGER_CLASS_TYPE),
+				stack(INT_TYPE)
+		);
+
+		clinit.invoke(
+				stack(HASH_MAP_TYPE),
+				MAP_PUT,
+				null,
+				stack(OBJECT_TYPE)
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> void invokeProxy(ClassInfo<? extends T> classInfo, Method method, String methodName, ClassInfo<?> returnType, FieldInfo<FunctionType> funType) {
+		CodeBlock<?> code = classInfo.declareMethod(
+				Modifier.PUBLIC,
+				methodName,
+				returnType,
+				Parameter.asParameter(method.getParameters())
+		);
+		AnnotationDef<DynamicMethod> anno = new AnnotationDef<>(
+				ClassInfo.asType(DynamicMethod.class).asAnnotation(EMP_MAP),
+				code.owner(),
+				EMP_MAP
+		);
+		code.owner().addAnnotation(anno);
+
+		code.loadConstant(stack(INT_TYPE), method.getParameterCount());
+		code.invoke(null, GET_LIST, stack(OBJECT_TYPE.asArray()), stack(INT_TYPE));
+
+		if (method.getParameterCount() > 0) {
+			for (int i = 0; i < code.getParamList().size(); i++) {
+				code.assign(stack(OBJECT_TYPE), stack(OBJECT_TYPE.asArray()));
+				code.loadConstant(stack(INT_TYPE), i);
+				code.arrayPut(stack(OBJECT_TYPE.asArray()), stack(INT_TYPE), code.getRealParam(i));
+			}
+		}
+
+		ILocal<Object[]> argList = code.local(OBJECT_TYPE.asArray());
+		code.assign(stack(OBJECT_TYPE.asArray()), argList);
+
+		if (returnType != VOID_TYPE) {
+			code.assign(code.getThis(), stack(classInfo));
+			code.assign(null, funType, stack(FUNCTION_TYPE_TYPE));
+			code.loadConstant(stack(STRING_TYPE), method.getName());
+			code.assign(argList, stack(OBJECT_TYPE.asArray()));
+
+			code.invoke(stack(classInfo), INVOKE, stack(OBJECT_TYPE), stack(OBJECT_TYPE));
+			code.invoke(null, RECYCLE_LIST, null, argList);
+			code.cast(stack(OBJECT_TYPE), stack(returnType));
+			code.returnValue(stack((IClass) returnType));
+		} else {
+			code.assign(code.getThis(), stack(classInfo));
+			code.assign(null, funType, stack(FUNCTION_TYPE_TYPE));
+			code.loadConstant(stack(STRING_TYPE), method.getName());
+			code.assign(argList, stack(OBJECT_TYPE.asArray()));
+
+			code.invoke(stack(classInfo), INVOKE, null, stack(OBJECT_TYPE));
+			code.invoke(null, RECYCLE_LIST, null, argList);
+		}
+	}
+
+	private static boolean filterMethod(Method method) {
+		//对于已经被声明为final的方法将被添加到排除列表
+		if (Modifier.isFinal(method.getModifiers())) {
+			DynamicMaker.FINALS.computeIfAbsent(method.getName(), e -> new HashSet<>()).add(FunctionType.from(method));
+			return false;
+		}
+
+		// 如果方法是静态的，或者方法不对子类可见则不重写此方法
+		if (Modifier.isStatic(method.getModifiers())) return false;
+		if ((method.getModifiers() & (Modifier.PUBLIC | Modifier.PROTECTED)) == 0) return false;
+
+		return !DynamicMaker.FINALS.computeIfAbsent(method.getName(), e -> new HashSet<>()).contains(FunctionType.from(method))
+				&& DynamicMaker.OVERRIDES.computeIfAbsent(method.getName(), e -> new HashSet<>()).add(FunctionType.from(method));
+	}
+
 	protected void makeSwitch(IClass<?> owner, HashMap<IMethod<?, ?>, Integer> callSuperCaseMap, CodeBlock<Object> code, ISwitch<Integer> iSwitch, ILocal<Object[]> args) {
 		for (Map.Entry<IMethod<?, ?>, Integer> entry : callSuperCaseMap.entrySet()) {
 			Label l = code.label();
@@ -1313,26 +1317,6 @@ public abstract class DynamicMaker {
 	 */
 	protected abstract <T> Class<? extends T> generateClass(Class<T> baseClass, Class<?>[] interfaces, Class<?>[] aspects);
 
-	/**
-	 * 动态委托类型标识，由此工厂生成的动态委托类型都会具有此注解标识
-	 */
-	@Target(ElementType.TYPE)
-	@Retention(RetentionPolicy.RUNTIME)
-	@interface DynamicType {
-	}
-
-	/**
-	 * 动态方法标识，所有被动态委托的方法会携带此注解，用于标识动态类行为的基础入口点
-	 */
-	@Target(ElementType.METHOD)
-	@Retention(RetentionPolicy.RUNTIME)
-	@interface DynamicMethod {
-	}
-
-	public interface SuperInvoker {
-		Object invokeSuper(String signature, Object... args);
-	}
-
 	protected static class FuzzyMatcher {
 		java.lang.reflect.Parameter[] parameters;
 		FuzzyMatch matcher;
@@ -1366,5 +1350,25 @@ public abstract class DynamicMaker {
 
 			return true;
 		}
+	}
+
+	/**
+	 * 动态委托类型标识，由此工厂生成的动态委托类型都会具有此注解标识
+	 */
+	@Target(ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	@interface DynamicType {
+	}
+
+	/**
+	 * 动态方法标识，所有被动态委托的方法会携带此注解，用于标识动态类行为的基础入口点
+	 */
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.RUNTIME)
+	@interface DynamicMethod {
+	}
+
+	public interface SuperInvoker {
+		Object invokeSuper(String signature, Object... args);
 	}
 }
