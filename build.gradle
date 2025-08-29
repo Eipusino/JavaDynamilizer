@@ -1,38 +1,33 @@
 plugins {
-  id 'java'
-  id 'com.github.johnrengelman.shadow' version '2.0.4'
+	id 'java'
 }
 
-apply plugin: 'maven-publish'
+sourceSets.main.java.srcDir('src')
 
-ext{
-  JDERVersion = 'V1.9-A1'
+repositories {
+	mavenCentral()
+	maven { url "https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository" }
+	maven { url 'https://www.jitpack.io' }
 }
 
-group 'com.github.EB-wilson'
-version JDERVersion
-
-publishing {
-  publications {
-    maven(MavenPublication) {
-      from components.java
-      org.gradle.api.internal.tasks.compile.JdkJavaCompiler
-    }
-  }
+java {
+	targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_17
 }
 
-assemble{
-  dependsOn(shadowJar)
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
 }
 
-generateMetadataFileForMavenPublication{
-  dependsOn(shadowJar)
+dependencies {
+	implementation files("libs/asm-9.5.jar")
 }
 
-allprojects{
-  tasks.withType(JavaCompile).tap {
-    configureEach {
-      options.encoding = "UTF-8"
-    }
-  }
+jar {
+	archiveFileName = "${base.archivesBaseName}.jar"
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+	from {
+		configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+	}
 }
