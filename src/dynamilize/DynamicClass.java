@@ -22,16 +22,16 @@ import java.util.HashMap;
  * </ul>
  * <p>描述动态类的行为需要{@linkplain DynamicClass#visitClass(Class, JavaHandleHelper) 行为样版}或者函数表达式，以增量模式编辑类型行为，方法和默认变量只能新增/变更，不可删除
  * <pre>{@code
- * 下面是一个简单的样例:
+ * //下面是一个简单的样例:
  * public class Template{
- *   public static String str = "string0";
+ *     public static String str = "string0";
  *
- *   public static void method(@This final DynamicObject self, String arg0){
- *     System.out.println(self.getVar(arg0));
- *   }
+ *     public static void method(@This final DynamicObject self, String arg0){
+ *         System.out.println(self.getVar(arg0));
+ *     }
  * }
  *
- * 引用：
+ * //引用：
  * DynamicMaker maker = DynamicMaker.getDefault();
  * DynamicClass dyClass = DynamicClass.get("Sample");
  * dyClass.visitClass(Template.class, maker.getHelper());
@@ -98,7 +98,7 @@ public class DynamicClass {
 		return res;
 	}
 
-	/** 创建类型实例，不应从外部调用此方法构造实例 */
+	/** Create class instances, this method should not be called externally to construct instances. */
 	DynamicClass(String name, DynamicClass superDyClass) {
 		this.name = name;
 		this.superDyClass = superDyClass;
@@ -106,8 +106,9 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 将此类型对象从池中移除并废弃，任何一个动态类不再被使用后，都应当正确的删除。
-	 * <p>在你调用此方法之前，<strong>请确保已经没有任何对此类型的引用</strong>
+	 * Remove this class of object from the pool and discard it. Any dynamic class that is no longer in use
+	 * should be deleted correctly.
+	 * <p>Before calling this method, <strong>please ensure that there are no more references to this class.</strong>
 	 */
 	public void delete() {
 		checkFinalized();
@@ -117,9 +118,9 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 获取此动态类型的名称
+	 * Get the name of this dynamic class
 	 *
-	 * @return 类型的唯一限定名称
+	 * @return Unique qualified name of class
 	 */
 	public String getName() {
 		checkFinalized();
@@ -128,9 +129,10 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 获取此动态类型的直接超类，可能为空，为空时表明此类的实例以委托类型作为直接超类
+	 * Get the direct superclass of this dynamic class, which may be empty. If it is empty, it indicates that
+	 * the instance of this class uses the delegate type as the direct superclass.
 	 *
-	 * @return 类型的直接超类
+	 * @return Direct superclass of class
 	 */
 	public DynamicClass superDyClass() {
 		checkFinalized();
@@ -204,10 +206,12 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 访问一个方法样版，不同于{@link DynamicClass#visitClass(Class, JavaHandleHelper)}，此方法只访问一个单独的方法并创建其行为样版。
-	 * <p>关于此方法的具体行为，请参阅访问行为样版类型的{@linkplain  DynamicClass#visitClass(Class, JavaHandleHelper) 方法部分}
+	 * Accessing a method template, unlike visitClass {@link DynamicClass#visitClass(Class, JavaHandleHelper)}, this
+	 * method only accesses a single method and creates its behavior template.
+	 * <p>For the specific behavior of this method, please refer to the {@linkplain  DynamicClass#visitClass(Class, JavaHandleHelper) method section} of the access behavior
+	 * template type.
 	 *
-	 * @param method 访问的方法样版
+	 * @param method Sample version of access method
 	 */
 	public void visitMethod(Method method, JavaHandleHelper helper) {
 		if (!Modifier.isStatic(method.getModifiers()) || !Modifier.isPublic(method.getModifiers()))
@@ -217,10 +221,12 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 访问一个字段样版，不同于{@link DynamicClass#visitClass(Class, JavaHandleHelper)}，此方法只访问一个单独的字段并创建其行为样版。
-	 * <p>关于此方法的具体行为，请参阅访问行为样版类型的{@linkplain  DynamicClass#visitClass(Class, JavaHandleHelper) 字段部分}
+	 * Accessing a field template, unlike {@link DynamicClass#visitClass(Class, JavaHandleHelper)}, this method only
+	 * accesses a single field and creates its behavior template.
+	 * <p>or the specific behavior of this method, please refer to the {@linkplain  DynamicClass#visitClass(Class, JavaHandleHelper) field section} of the access behavior
+	 * template type.
 	 *
-	 * @param field 访问的字段样版
+	 * @param field Field sample for access
 	 */
 	public void visitField(Field field) {
 		if (!Modifier.isStatic(field.getModifiers()) || !Modifier.isPublic(field.getModifiers()))
@@ -230,11 +236,12 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 以lambda模式设置函数，使用匿名函数描述类型行为，对类型行为变更的效果与{@link DynamicClass#visitClass(Class, JavaHandleHelper)}的方法部分相同
+	 * Set functions in lambda mode, use anonymous functions to describe type behavior, and the effect
+	 * of changing type behavior is the same as the method part of {@link DynamicClass#visitClass(Class, JavaHandleHelper)}.
 	 *
-	 * @param name     函数名称
-	 * @param func     描述函数行为的匿名函数
-	 * @param argTypes 函数的形式参数类型
+	 * @param name     function name
+	 * @param func     Anonymous functions that describe function behavior
+	 * @param argTypes Formal parameter types of functions
 	 */
 	public <S, R> void setFunction(String name, Function<S, R> func, Class<?>... argTypes) {
 		data.setFunction(name, func, argTypes);
@@ -244,7 +251,10 @@ public class DynamicClass {
 		data.setFunction(name, func, argTypes);
 	}
 
-	/** 同{@link DynamicClass#setFunction(String, Function, Class[])}，只是匿名函数无返回值 */
+	/**
+	 * Same as {@link DynamicClass#setFunction(String, Function, Class[])}, but anonymous function has no return
+	 * value.
+	 */
 	public <S> void setFunction(String name, Function.NonRetFunction<S> func, Class<?>... argTypes) {
 		this.<S, Object>setFunction(name, (s, a) -> {
 			func.invoke(s, a);
@@ -252,7 +262,10 @@ public class DynamicClass {
 		}, argTypes);
 	}
 
-	/** 同{@link DynamicClass#setFunction(String, Function.SuperGetFunction, Class[])}，只是匿名函数无返回值 */
+	/**
+	 * Same as {@link DynamicClass#setFunction(String, Function.SuperGetFunction, Class[])}, but anonymous function
+	 * has no return value.
+	 */
 	public <S> void setFunction(String name, Function.NonRetSuperGetFunc<S> func, Class<?>... argTypes) {
 		this.<S, Object>setFunction(name, (s, sup, a) -> {
 			func.invoke(s, sup, a);
@@ -261,9 +274,10 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 常量模式设置变量初始值，行为与{@link DynamicClass#visitClass(Class, JavaHandleHelper)}字段部分相同
+	 * The constant mode sets the initial value of the variable, and its behavior is similar to that of the
+	 * {@link DynamicClass#visitClass(Class, JavaHandleHelper)} field.
 	 *
-	 * @param name  变量名称
+	 * @param name  variable name
 	 * @param value 常量值
 	 */
 	public void setVariable(String name, Object value) {
@@ -271,10 +285,11 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 函数模式设置变量初始化工厂，行为与{@link DynamicClass#visitClass(Class, JavaHandleHelper)}字段部分相同
+	 * Function mode setting variable initialization factory, behavior is the same as the field part of
+	 * {@link DynamicClass#visitClass(Class, JavaHandleHelper)}.
 	 *
-	 * @param name 变量名称
-	 * @param prov 生产变量初始值的工厂函数
+	 * @param name variable name
+	 * @param prov Factory function for initial values of production variables
 	 */
 	public void setVariable(String name, Initializer.Producer<?> prov) {
 		data.setVariable(new Variable(name, new Initializer<>(prov)));

@@ -5,12 +5,12 @@ public interface IFunctionEntry {
 		return FunctionType.signature(getName(), getType());
 	}
 
-	/** 获取入口的名称 */
+	/** Get the name of the entrance. */
 	String getName();
 
-	/** 获取此方法入口定义的引用匿名函数 */
+	/** Get the reference anonymous function defined by the entrance of this method. */
 	<S, R> Function<S, R> getFunction();
 
-	/** 获取此方法的形式参数表类型 */
+	/** Get the formal parameter table type of this method. */
 	FunctionType getType();
 }

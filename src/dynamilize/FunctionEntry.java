@@ -1,6 +1,5 @@
 package dynamilize;
 
-
 public class FunctionEntry<S, R> implements IFunctionEntry {
 	private final String name;
 	private final Function<S, R> func;
@@ -30,8 +29,8 @@ public class FunctionEntry<S, R> implements IFunctionEntry {
 		return name;
 	}
 
-	@Override
 	@SuppressWarnings("unchecked")
+	@Override
 	public Function<S, R> getFunction() {
 		return func;
 	}

@@ -90,12 +90,13 @@ public interface DynamicObject<S> {
 	}
 
 	/**
-	 * 获取对象的函数的匿名函数表示
-	 * <p>生成器实施应当实现此方法使之调用数据池的{@link DataPool#select(String, FunctionType)}方法并返回值
+	 * Anonymous function representation for obtaining the function of an object.
+	 * <p>The generator implementation should implement this method to call the
+	 * {@link DataPool#select(String, FunctionType)} method of the data pool and return a value.
 	 *
-	 * @param name 函数名称
-	 * @param type 函数的参数类型
-	 * @return 指定函数的匿名表示
+	 * @param name function name
+	 * @param type Parameter types of functions
+	 * @return Anonymous representation of specified function
 	 */
 	IFunctionEntry getFunc(String name, FunctionType type);
 
@@ -197,13 +198,13 @@ public interface DynamicObject<S> {
 		return res.invoke(this, args);
 	}
 
-	/** 将对象自身经过一次强转换并返回 */
+	/** Perform a strong transformation on the object itself and return it */
 	default <T extends S> T objSelf() {
 		return (T) this;
 	}
 
 	//primitive getters and setters
-	//我讨厌装箱类型，是的，相当讨厌......
+	//I hate packing types, yes, quite annoying .....
 	default boolean getVar(String name, boolean def) {
 		IVariable var = getVariable(name);
 		if (var == null)

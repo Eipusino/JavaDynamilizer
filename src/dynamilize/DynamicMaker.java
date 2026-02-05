@@ -73,7 +73,7 @@ import static dynamilize.runtimeannos.FuzzyMatch.Exact.INSTANCE;
  * @see DynamicObject
  * @see DataPool
  */
-@SuppressWarnings({"rawtypes", "DuplicatedCode"})
+@SuppressWarnings("rawtypes")
 public abstract class DynamicMaker {
 	public static final String CALLSUPER = "$super";
 

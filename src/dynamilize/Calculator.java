@@ -6,8 +6,8 @@ package dynamilize;
  * @author EBwilson
  */
 @FunctionalInterface
-public interface Calculator<Type> {
-	Type calculate(Type input);
+public interface Calculator<T> {
+	T calculate(T input);
 
 	@FunctionalInterface
 	interface BoolCalculator {

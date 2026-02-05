@@ -15,64 +15,76 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 包私有方法访问提升使用的工具类，该类用于对一个目标类创建一串用于提升包私有方法的继承子树，以达到对包私有方法进行重写的目的
- * <br>具体来说，将目标基类传入{@link PackageAccHandler#handle(Class)}方法以后，会依次检查此类型的，每一个父类型中是否存在包私有的方法，
- * 若存在包私有方法，那么就会使用这个类的包名对上一层类型继承一次，通过{@link PackageAccHandler#loadClass(ClassInfo, Class)}将这个类加载到同一保护域，
- * 此时，此次继承类型即可访问目标类包私有方法，重写并将其访问修饰符提升为{@code protected}，如此完成对基类所有超类的遍历后即可访问所有该类层次结构中的包私有方法
- *
- * <p>直观的说，这个类做的事情如下：
+ * The utility class used to access and elevate package private methods is used to create a string of
+ * inheritance subtrees for elevating package private methods on a target class, in order to achieve the
+ * purpose of rewriting package private methods.
+ * <p>Specifically, after passing the target base class into the {@link PackageAccHandler#handle(Class)} method, it will sequentially check
+ * whether there are package private methods in each parent type of this type. If there are package private
+ * methods, the package name of this class will be used to inherit from the previous level of the type. By
+ * loading this class into the same protected domain through {@link PackageAccHandler#loadClass(ClassInfo, Class)}, the
+ * inherited type can access the target class's package private methods. Rewrite and raise its access modifier
+ * to {@code protected}. After completing the traversal of all superclass in the base class, all package private
+ * methods in the hierarchical structure of this class can be accessed.
+ * <p>Intuitively speaking, this class does the following:
  * <pre>{@code
- * 假设有下面几个类：
+ * //Assuming there are several classes as follows:
  *
- * package pac1;
- * public class A{
- *   void method1(){ //包私有方法
+ * //package pac1;
+ * public class A {
+ *     void method1() { //package-private method
  *
- *   }
+ *     }
  *
- *   public void test(){
- *     method1();
- *   }
+ *     public void test() {
+ *         method1();
+ *     }
  * }
  *
- * package pac2;
+ * //package pac2;
  * import pac1.A;
- * public class B extends A{
- *   void method2(){ //包私有方法
  *
- *   }
+ * public class B extends A {
+ *     void method2() { //package-private method
  *
- *   @Override
- *   public void test(){
- *     super.test();
- *     method2();
- *   }
+ *     }
+ *
+ *     @Override
+ *     public void test() {
+ *         super.test();
+ *         method2();
+ *     }
  * }
  *
- * 如果对handle方法传入B类，那么会创建如下两个类型：
+ * //If the handle method is passed into class B, the following two types will be created:
  *
- * package pac2:
- * public class B$packageAccess$0 extends B{
- *   @Override
- *   protected void method2(){
- *     super.method2();
- *   }
+ * //package pac2:
+ * public class B$packageAccess$0 extends B {
+ *     @Override
+ *     protected void method2() {
+ *         super.method2();
+ *     }
  * }
  *
- * package pac1:
+ * //package pac1:
  * import pac2.B$packageAccess$0;
- * public class A$packageAccess$0 extends B$packageAccess$0{
- *   @Override
- *   protected void method1(){
- *     super.method2();
- *   }
+ *
+ * public class A$packageAccess$0 extends B$packageAccess$0 {
+ *     @Override
+ *     protected void method1() {
+ *         super.method2();
+ *     }
  * }
  *
- * 最后handle方法会将类对象pac1.A$packageAccess$0返回，此时，所有包私有方法都已被提升为protected，其子类对两个包私有方法的重写，在调用test方法时都会生效
+ * //Finally, the handle method will return the class object pac1.A$packageAccess$0.
+ * //At this point, all package private methods have been promoted to protected,
+ * //and the subclass's rewriting of both package private methods will take effect when calling the test method.
  * }</pre>
- * <strong>注意：<ul>
- * <li>以上所示的跨包继承同包类的方法重写实际上在java编译器中是不合法的，但在JVM当中此逻辑有效，上述代码仅作逻辑示意</li>
- * <li>由于java包命名空间限制的问题，无法正常从外部加载java开他包名的类型，所以开放包私有方法对包名以“java.”开头的类不生效</li>
+ * <strong>Note:<ul>
+ * <li>The method of cross package inheritance and class rewriting shown above is actually illegal in Java compilers, but this logic is valid in
+ * JVM. The above code is only for logical illustration.</li>
+ * <li>Due to the limitation of Java package namespace, it is not possible to load Java open package
+ * name types from external sources. Therefore, open package private methods do not apply to
+ * classes whose package names start with, but are not limited to, {@code java.}, {@code javax.}, {@code jdk.}, {@code sun.}.</li>
  * </ul></strong>
  *
  * @author EBwilson
@@ -81,6 +93,7 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public abstract class PackageAccHandler {
 	public static final int PAC_PRI_FLAGS = Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE | Modifier.STATIC | Modifier.FINAL;
+	@SuppressWarnings("rawtypes")
 	public static final ILocal[] A = new ILocal[0];
 	private final Map<Class<?>, Class<?>> classMap = new HashMap<>();
 
@@ -174,6 +187,9 @@ public abstract class PackageAccHandler {
 		return (ClassInfo<? extends T>) res;
 	}
 
-	/** 将目标{@linkplain ClassInfo 类型信息}加载为与基类型同一保护域的对象，根据目标运行平台实现该方法 */
+	/**
+	 * Load the target {@linkplain ClassInfo class information} as an object with the same protection domain as the base class,
+	 * and implement this method based on the target platform.
+	 */
 	protected abstract <T> Class<? extends T> loadClass(ClassInfo<?> clazz, Class<T> baseClass);
 }

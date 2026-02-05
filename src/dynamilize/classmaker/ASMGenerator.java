@@ -130,8 +130,8 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 		return writer.toByteArray();
 	}
 
-	@Override
 	@SuppressWarnings("unchecked")
+	@Override
 	protected <T> Class<T> generateClass(ClassInfo<T> classInfo) throws ClassNotFoundException {
 		try {
 			return (Class<T>) classLoader.loadClass(classInfo.name(), false);
@@ -993,7 +993,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 	protected void visitConstant(Object value) {
 		if (value == null) {
 			methodVisitor.visitInsn(Opcodes.ACONST_NULL);
-		} else if (value instanceof Class c) {
+		} else if (value instanceof Class<?> c) {
 			if (c.isPrimitive()) {
 				IClass<?> type;
 				type = c == int.class ? ClassInfo.asType(Integer.class) :
@@ -1014,7 +1014,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 						"TYPE",
 						CLASS_TYPE.realName()
 				);
-			} else methodVisitor.visitLdcInsn(Type.getType(ClassInfo.asType((Class<?>) value).realName()));
+			} else methodVisitor.visitLdcInsn(Type.getType(ClassInfo.asType(c).realName()));
 		} else if (value.getClass().isArray()) {
 			Class<?> componentType = value.getClass().getComponentType();
 
@@ -1068,8 +1068,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 			}
 		} else if (value instanceof String || value instanceof Float
 				|| value instanceof Long || value instanceof Double) {
-			if (value instanceof Long) {
-				long l = (long) value;
+			if (value instanceof Long l) {
 				if (l == 0) {
 					methodVisitor.visitInsn(Opcodes.LCONST_0);
 					return;
@@ -1077,8 +1076,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 					methodVisitor.visitInsn(Opcodes.LCONST_1);
 					return;
 				}
-			} else if (value instanceof Float) {
-				float f = (float) value;
+			} else if (value instanceof Float f) {
 				if (f == 0) {
 					methodVisitor.visitInsn(Opcodes.FCONST_0);
 					return;
@@ -1089,8 +1087,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 					methodVisitor.visitInsn(Opcodes.FCONST_2);
 					return;
 				}
-			} else if (value instanceof Double) {
-				double d = (double) value;
+			} else if (value instanceof Double d) {
 				if (d == 0) {
 					methodVisitor.visitInsn(Opcodes.DCONST_0);
 					return;
@@ -1138,12 +1135,12 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 			} else {
 				methodVisitor.visitLdcInsn(value);
 			}
-		} else if (value instanceof Enum<?>) {
+		} else if (value instanceof Enum<?> e) {
 			IClass<?> type = ClassInfo.asType(value.getClass());
 			methodVisitor.visitFieldInsn(
 					Opcodes.GETSTATIC,
 					type.internalName(),
-					((Enum<?>) value).name(),
+					e.name(),
 					type.realName()
 			);
 		}

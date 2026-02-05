@@ -10,12 +10,17 @@ import java.util.List;
 import java.util.Stack;
 
 /**
- * 函数类型封装对象，记录函数的参数类型用于比对和搜索函数
+ * Function type encapsulates objects, recording the parameter types of functions for comparison and
+ * search.
  *
  * @author EBwilson
  */
 public class FunctionType {
-	/** 复用回收区容量，改数值通常不需要设置，但如果您可能需要大规模的递归或大量的并发调用，那么您可能需要将这个限制设置为一个更高的数值 */
+	/**
+	 * Reuse the recycling area capacity, changing the value usually does not require setting, but if you
+	 * may need large-scale recursion or a large number of concurrent calls, you may need to set this limit
+	 * to a higher value.
+	 */
 	public static int MAX_RECYCLE = 4096;
 
 	private static final Class<?>[] EMPTY = new Class[0];
@@ -29,7 +34,10 @@ public class FunctionType {
 		hash = Arrays.hashCode(paramType);
 	}
 
-	//此类存在频繁的调用，数据量小，使用流处理数据会产生不必要的性能花销，使用for遍历取代流处理
+	/**
+	 * This type of data has frequent calls, small data volume, and unnecessary performance costs when
+	 * using stream processing. Using for traversal instead of stream processing.
+	 */
 	public static Class<?>[] wrapper(Class<?>... clazz) {
 		for (int i = 0; i < clazz.length; i++) {
 			clazz[i] = wrapper(clazz[i]);
@@ -53,6 +61,7 @@ public class FunctionType {
 		if (clazz == short.class) return Short.class;
 		if (clazz == boolean.class) return Boolean.class;
 		if (clazz == char.class) return Character.class;
+		if (clazz == void.class) return Void.class;
 		return clazz;
 	}
 
@@ -65,6 +74,7 @@ public class FunctionType {
 		if (clazz == Short.class) return short.class;
 		if (clazz == Boolean.class) return boolean.class;
 		if (clazz == Character.class) return char.class;
+		if (clazz == Void.class) return void.class;
 		return clazz;
 	}
 
@@ -150,8 +160,10 @@ public class FunctionType {
 		if (argsType.length != paramType.length) return false;
 
 		for (int i = 0; i < paramType.length; i++) {
-			if (argsType[i] == void.class) continue;
-			if (!paramType[i].isAssignableFrom(argsType[i])) return false;
+			Class<?> type = argsType[i];
+
+			if (type == void.class) continue;
+			if (!paramType[i].isAssignableFrom(type)) return false;
 		}
 
 		return true;
@@ -170,10 +182,8 @@ public class FunctionType {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof FunctionType that)) return false;
-		return paramType.length == that.paramType.length && hashCode() == o.hashCode();
+	public boolean equals(Object obj) {
+		return this == obj || obj instanceof FunctionType that && paramType.length == that.paramType.length && hashCode() == obj.hashCode();
 	}
 
 	@Override
@@ -183,13 +193,15 @@ public class FunctionType {
 
 	@Override
 	public String toString() {
-		StringBuilder b = new StringBuilder("(");
+		StringBuilder builder = new StringBuilder();
+
+		builder.append('(');
 
 		for (Class<?> clazz : paramType) {
-			b.append(ClassInfo.asType(clazz).realName());
+			builder.append(ClassInfo.asType(clazz).realName());
 		}
-		b.append(")");
+		builder.append(')');
 
-		return b.toString();
+		return builder.toString();
 	}
 }

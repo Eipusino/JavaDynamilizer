@@ -4,13 +4,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * 用于对对象进行动态访问的包装对象，仅具有受限的动态行为（可视为一个反射包装器）。
- * <p>
- * 对于一个包装动态对象，仅能动态的访问其原有的属性和方法，以下行为将抛出异常：
+ * A wrapper object used for dynamic access to objects, with only limited dynamic behavior (considered as a
+ * reflective wrapper).
+ * <p>For a packaged dynamic object that can only dynamically access its original properties and methods, the
+ * following behavior will throw an exception:
  * <ul>
- *   <li>尝试访问在被包装对象的层次结构中没有定义的成员（字段，方法）</li>
- *   <li>尝试修改包装动态对象的动态类型</li>
- *   <li>将包装动态对象尝试转换成被包装的对象类型</li>
+ *   <li>Attempt to access members (fields, methods) that are not defined in the hierarchy of the packaged object</li>
+ *   <li>Attempt to modify the dynamic type of the packaging dynamic object</li>
+ *   <li>Attempt to convert the packaged dynamic object into the packaged object type</li>
  * </ul>
  */
 public class WrappedObject<T> implements DynamicObject<T> {

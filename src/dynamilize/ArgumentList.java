@@ -4,14 +4,18 @@ import java.util.Arrays;
 import java.util.Stack;
 
 /**
- * 实参列表的封装对象，记录了一份实际参数列表，提供了一个泛型获取参数的方法，用于减少函数引用时所需的冗余类型转换。
- * <p>参数表对象为可复用对象，引用完毕后请使用{@link ArgumentList#recycle()}回收对象以减少堆内存更新频率
+ * The encapsulation object of the actual parameter list records an actual parameter list and provides a
+ * generic method for obtaining parameters to reduce redundant type conversions required when
+ * referencing functions.
+ * <p>The parameter table object is a reusable object. After referencing, please use {@link ArgumentList#recycle()} to recycle the
+ * object to reduce the frequency of heap memory updates.
  *
  * @author EBwilson
  */
 public class ArgumentList {
 	public static int MAX_INSTANCE_STACK = 2048;
 
+	@SuppressWarnings("unchecked")
 	public static final Stack<Object[]>[] ARG_LEN_MAP = new Stack[64];
 	public static final Object[] EMP_ARG = new Object[0];
 
@@ -26,9 +30,8 @@ public class ArgumentList {
 	private Object[] args;
 	private FunctionType type;
 
-	/** 私有构造器，不允许外部直接使用 */
-	private ArgumentList() {
-	}
+	/** package-private constructor, not allowed for direct external use. */
+	ArgumentList() {}
 
 	public static synchronized Object[] getList(int len) {
 		if (len == 0) return EMP_ARG;
@@ -46,11 +49,13 @@ public class ArgumentList {
 	}
 
 	/**
-	 * 使用一组实参列表获取一个封装参数列表，优先从实例堆栈中弹出，若堆栈中没有实例才会构造一个新的
-	 * 参数如果包含null，建议使用{@link ArgumentList#asWithType(FunctionType, Object...)}来获取参数列表，在明确指定形参的情况下执行可以具有更高的效率
+	 * Use a set of actual parameter lists to obtain a encapsulated parameter list, which is first popped out
+	 * of the instance stack. If there are no instances in the stack, a new one will be constructed.
+	 * <p>If the parameter contains null, it is recommended to use {@link ArgumentList#asWithType(FunctionType, Object...)}
+	 * to obtain the parameter list. Execution with explicitly specified parameters can have higher efficiency.
 	 *
-	 * @param args 实参列表
-	 * @return 封装参数对象
+	 * @param args Actual parameter list
+	 * @return Encapsulate parameter objects
 	 */
 	public static synchronized ArgumentList as(Object... args) {
 		ArgumentList res = INSTANCES.isEmpty() ? new ArgumentList() : INSTANCES.pop();
@@ -68,7 +73,10 @@ public class ArgumentList {
 		return res;
 	}
 
-	/** 回收实例，使实例重新入栈，若堆栈已到达最大容量，则不会继续插入实例堆栈中 */
+	/**
+	 * Recycle the instance and push it back onto the stack. If the stack has reached its maximum capacity,
+	 * it will not continue to be inserted into the instance stack.
+	 */
 	public void recycle() {
 		args = null;
 		type = null;
@@ -78,12 +86,13 @@ public class ArgumentList {
 	}
 
 	/**
-	 * 获取给定索引处的实参值，类型根据引用推断，若类型不可用会抛出类型转换异常
+	 * Retrieve the actual parameter value at the given index, infer the type based on the reference, and
+	 * throw a type conversion exception if the type is unavailable.
 	 *
-	 * @param index 参数在列表中的索引位置
-	 * @param <T>   参数类型，通常可以根据引用推断
-	 * @return 实参的值
-	 * @throws ClassCastException 若接受者所需的类型与参数类型不可分配
+	 * @param index The index position of the parameter in the list
+	 * @param <T>   Parameter types can usually be inferred based on references
+	 * @return The value of the actual parameter
+	 * @throws ClassCastException If the recipient's required type and parameter type are not assignable
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T get(int index) {
@@ -91,18 +100,18 @@ public class ArgumentList {
 	}
 
 	/**
-	 * 获取实参列表的数组
+	 * Get an array of actual parameter lists
 	 *
-	 * @return 实参构成的数组
+	 * @return Array composed of actual parameters
 	 */
 	public Object[] args() {
 		return args;
 	}
 
 	/**
-	 * 获取形式参数类型封装对象
+	 * Get formal parameter type encapsulated object
 	 *
-	 * @return 该实参列表的形式参数类型
+	 * @return The formal parameter type of this parameter list
 	 */
 	public FunctionType type() {
 		return type;
@@ -111,6 +120,6 @@ public class ArgumentList {
 	@Override
 	public String toString() {
 		String arg = Arrays.toString(args);
-		return "(" + arg.substring(1, arg.length() - 1) + ")";
+		return '(' + arg.substring(1, arg.length() - 1) + ')';
 	}
 }

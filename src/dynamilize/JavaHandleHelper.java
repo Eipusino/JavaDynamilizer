@@ -4,8 +4,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * 出于jdk16+进一步升级的模块化管理以及跨平台和跨版本考虑，提供java基本行为的平台支持器，这包含了一些与版本/平台有关的行为接口。
- * <p>实施时应当按方法的功能说明针对运行平台进行实现。
+ * For the further upgrade of JDK16+in terms of modular management and cross platform and cross version
+ * considerations, a platform support tool for Java basic behavior is provided, which includes some behavior
+ * interfaces related to version/platform.
+ * <p>The implementation should be carried out according to the functional description of the method for the
+ * operating platform.
  *
  * @author EBwilson
  */

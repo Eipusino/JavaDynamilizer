@@ -125,6 +125,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 	public static final String PRIMITIVE_REAL = "IFJZBCDV";
 
+	@SuppressWarnings("unchecked")
 	private static final IClass<? extends Throwable>[] EMP_ARR = new IClass[0];
 
 	/**
@@ -756,7 +757,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 		Map<String, Object> map = new HashMap<>(defAttributes);
 		for (Element element : elements()) {
-			if (!(element instanceof IMethod<?, ?> met) || !Modifier.isAbstract(((IMethod<?, ?>) element).modifiers()))
+			if (!(element instanceof IMethod<?, ?> met) || !Modifier.isAbstract(met.modifiers()))
 				throw new IllegalHandleException("clazz " + this + " was not a annotation type");
 
 			IClass<?> type = met.returnType();

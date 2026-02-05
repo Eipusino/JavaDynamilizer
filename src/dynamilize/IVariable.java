@@ -3,7 +3,7 @@ package dynamilize;
 public interface IVariable {
 	String name();
 
-	void init(DynamicObject<?> object);
+	default void init(DynamicObject<?> obj) {}
 
 	<T> T get(DynamicObject<?> obj);
 
@@ -24,6 +24,8 @@ public interface IVariable {
 
 	double get(DynamicObject<?> obj, double def);
 
+	char get(DynamicObject<?> obj, char def);
+
 	//primitive setters
 	void set(DynamicObject<?> obj, boolean value);
 
@@ -38,4 +40,6 @@ public interface IVariable {
 	void set(DynamicObject<?> obj, float value);
 
 	void set(DynamicObject<?> obj, double value);
+
+	void set(DynamicObject<?> obj, char value);
 }
