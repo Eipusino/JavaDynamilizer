@@ -171,13 +171,13 @@ public abstract class DynamicMaker {
 				for (Method method : clazz.getDeclaredMethods()) {
 					if (Modifier.isStatic(method.getModifiers())) continue;
 
-					r.setFunction(helper.genJavaMethodRef(method));
+					r.setFunction(helper.getJavaMethodReference(method));
 				}
 
 				for (Field field : clazz.getDeclaredFields()) {
 					if (Modifier.isStatic(field.getModifiers())) continue;
 
-					r.setVariable(helper.genJavaVariableRef(field));
+					r.setVariable(helper.getJavaVariableReference(field));
 				}
 
 				return r;
@@ -358,7 +358,7 @@ public abstract class DynamicMaker {
 				for (Field field : curr.getDeclaredFields()) {
 					if (Modifier.isStatic(field.getModifiers()) || isInternalField(field.getName())) continue;
 
-					res.setVariable(helper.genJavaVariableRef(field));
+					res.setVariable(helper.getJavaVariableReference(field));
 				}
 				curr = curr.getSuperclass();
 			}

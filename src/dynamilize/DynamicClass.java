@@ -325,7 +325,7 @@ public class DynamicClass {
 		boolean thisP = thisPointer;
 		boolean superP = superPointer;
 
-		Function<Object, Object> v = helper.genJavaMethodRef(method).getFunction();
+		Function<Object, Object> v = helper.getJavaMethodReference(method).getFunction();
 
 		int offset = thisP ? superP ? 2 : 1 : 0;
 		FunctionType type = FunctionType.inst(method);

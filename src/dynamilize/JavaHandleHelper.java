@@ -1,5 +1,6 @@
 package dynamilize;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -13,9 +14,13 @@ import java.lang.reflect.Method;
  * @author EBwilson
  */
 public interface JavaHandleHelper {
-	void makeAccess(Object object);
+	default void makeAccess(Object object) {
+		if (object instanceof AccessibleObject obj) {
+			obj.setAccessible(true);
+		}
+	}
 
-	IVariable genJavaVariableRef(Field field);
+	IVariable getJavaVariableReference(Field field);
 
-	IFunctionEntry genJavaMethodRef(Method method);
+	IFunctionEntry getJavaMethodReference(Method method);
 }
