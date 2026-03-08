@@ -64,12 +64,12 @@ public interface DynamicObject<S> {
 	 * @param value 属性值
 	 */
 	default <T> void setVar(String name, T value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	<T> T varValueGet(String name);
@@ -105,7 +105,7 @@ public interface DynamicObject<S> {
 		if (entry == null)
 			throw new IllegalHandleException("no such function: " + name + type);
 
-		return a -> (R) entry.<S, R>getFunction().invoke(this, a);
+		return a -> (R) entry.<S, R>getFunc().invoke(this, a);
 	}
 
 	default <R> Delegate<R> getFunction(String name, Class<?>... types) {
@@ -117,7 +117,7 @@ public interface DynamicObject<S> {
 
 	default <R> Function<S, R> getFunc(String name, Class<?>... types) {
 		FunctionType type = FunctionType.inst(types);
-		Function<S, R> f = getFunc(name, type).getFunction();
+		Function<S, R> f = getFunc(name, type).getFunc();
 		type.recycle();
 		return f;
 	}
@@ -190,7 +190,7 @@ public interface DynamicObject<S> {
 	 */
 	default <R> R invokeFunc(String name, ArgumentList args) {
 		FunctionType type = args.type();
-		Function<S, R> res = getFunc(name, type).getFunction();
+		Function<S, R> res = getFunc(name, type).getFunc();
 
 		if (res == null)
 			throw new IllegalHandleException("no such method declared: " + name);
@@ -206,122 +206,122 @@ public interface DynamicObject<S> {
 	//primitive getters and setters
 	//I hate packing types, yes, quite annoying .....
 	default boolean getVar(String name, boolean def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default byte getVar(String name, byte def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default short getVar(String name, short def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default int getVar(String name, int def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default long getVar(String name, long def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default float getVar(String name, float def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default double getVar(String name, double def) {
-		IVariable var = getVariable(name);
-		if (var == null)
+		IVariable variable = getVariable(name);
+		if (variable == null)
 			throw new IllegalHandleException("variable " + name + " was not defined");
 
-		return var.get(this, def);
+		return variable.get(this, def);
 	}
 
 	default void setVar(String name, boolean value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default void setVar(String name, byte value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default void setVar(String name, short value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default void setVar(String name, int value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default void setVar(String name, long value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default void setVar(String name, float value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default void setVar(String name, double value) {
-		IVariable var = getVariable(name);
-		if (var == null) {
-			var = new Variable(name);
-			setVariable(var);
+		IVariable variable = getVariable(name);
+		if (variable == null) {
+			variable = new Variable(name);
+			setVariable(variable);
 		}
-		var.set(this, value);
+		variable.set(this, value);
 	}
 
 	default boolean calculateVar(String name, Calculator.BoolCalculator calculator) {

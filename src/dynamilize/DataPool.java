@@ -8,9 +8,14 @@ import java.util.Map;
 import java.util.Stack;
 
 /**
- * 用于存储和处置动态对象数据的信息容器，不应从外部访问，每一个动态对象都会绑定一个数据池存放对象的变量/函数等信息。
- * <p>对于一个{@linkplain DynamicClass 动态类}的实例，实例的数据池一定会有一个父池，这个池以动态类的直接超类描述的信息进行初始化。
- * <p>访问池信息无论如何都是以最近原则，即若本池内没有找到数据，则以距离实例的池最近的具有此变量/函数的父池的数据为准
+ * The information container used for storing and handling dynamic object data should not be accessed
+ * externally. Each dynamic object is bound to a data pool to store information such as variables/functions
+ * of the object.
+ * <p>For an instance of the {@linkplain DynamicClass dynamic class}, the instance's data pool must have a parent pool that is initialized
+ * with information from the direct superclass description of the dynamic class.
+ * <p>Access to pool information is always based on the nearest principle, which means that if no data is found
+ * in the current pool, the data from the parent pool with this variable/function that is closest to the
+ * instance's pool will be used as the reference.
  *
  * @author EBwilson
  */
@@ -30,10 +35,11 @@ public class DataPool {
 	private final Map<String, IVariable> varPool = new HashMap<>();
 
 	/**
-	 * 创建一个池对象并绑定到父池，父池可为null，这种情况下此池应当为被委托类型的方法/字段引用。
-	 * <p><strong>通常来说你不应该在{@link DynamicMaker}之外的任何地方实例化此类型</strong>
+	 * Create a pool object and bind it to the parent pool, which can be null. In this case, the pool should
+	 * be a method/field reference of the delegated type.
+	 * <p><strong>Generally speaking, you should not instantiate this type anywhere outside of {@link DynamicMaker}</strong>.
 	 *
-	 * @param superPool 此池的父池
+	 * @param superPool The parent pool of this pool
 	 */
 	public DataPool(DataPool superPool) {
 		this.superPool = superPool;
@@ -57,7 +63,7 @@ public class DataPool {
 		IFunctionEntry fun = select(init, lis.type());
 		if (fun == null) return;
 
-		fun.getFunction().invoke((DynamicObject<Object>) self, args);
+		fun.getFunc().invoke((DynamicObject<Object>) self, args);
 		lis.type().recycle();
 		lis.recycle();
 	}
@@ -68,26 +74,29 @@ public class DataPool {
 
 	public Function<?, ?> getConstructor(Class<?>... argType) {
 		FunctionType type = FunctionType.inst(argType);
-		Function<?, ?> fun = select(init, type).getFunction();
+		Function<?, ?> fun = select(init, type).getFunc();
 		type.recycle();
 		return fun;
 	}
 
 	/**
-	 * 在本池设置一个函数，无论父池是否具有同名同类型的函数存在，若本池中存在同名同类型函数，则旧函数将被覆盖。
-	 * <p>函数的名称，行为与参数类型和java方法保持一致，返回值由行为传入的匿名函数确定，例如：
+	 * Set a function in this pool, regardless of whether the parent pool has a function with the same
+	 * name and type. If a function with the same name and type exists in this pool, the old function will
+	 * be overwritten.
+	 * <p>The name, behavior, parameter type, and Java method of the function are consistent, and the return
+	 * value is determined by the anonymous function passed in the behavior, for example:
 	 * <pre>{@code
-	 * java定义的方法
-	 * int getTime(String location){
-	 *   return foo(location);
+	 * // java defined methods
+	 * int getTime(String location) {
+	 *     return foo(location);
 	 * }
-	 * 等价于设置函数
+	 * //Equivalent to setting a function
 	 * set("getTime", (self, args) -> return foo(args.get(0)), String.class);
 	 * }</pre>
 	 *
-	 * @param name     函数名称
-	 * @param argsType 函数的参数类型列表
-	 * @param function 描述此函数行为的匿名函数
+	 * @param name     Function Name
+	 * @param argsType List of parameter types for functions
+	 * @param function An anonymous function that describes the behavior of this function
 	 */
 	public void setFunction(String name, Function<?, ?> function, Class<?>... argsType) {
 		FunctionType type = FunctionType.inst(argsType);
@@ -106,10 +115,10 @@ public class DataPool {
 	}
 
 	/**
-	 * 从类层次结构中获取变量的对象
+	 * Retrieve the object of variables from the class hierarchy
 	 *
-	 * @param name 变量名
-	 * @return 变量对象
+	 * @param name variable name
+	 * @return Variable object
 	 */
 	public IVariable getVariable(String name) {
 		IVariable var = varPool.get(name);
@@ -123,12 +132,12 @@ public class DataPool {
 	}
 
 	/**
-	 * 向池中添加一个变量对象，一般来说仅在标记java字段作为变量时会用到
+	 * Adding a variable object to the pool is generally only used when marking Java fields as variables.
 	 *
-	 * @param var 加入池的变量
+	 * @param variable Variables added to the pool
 	 */
-	public void setVariable(IVariable var) {
-		varPool.putIfAbsent(var.name(), var);
+	public void setVariable(IVariable variable) {
+		varPool.putIfAbsent(variable.name(), variable);
 	}
 
 	/**
@@ -282,7 +291,7 @@ public class DataPool {
 		public <R> R invokeFunc(String name, ArgumentList args) {
 			FunctionType type = args.type();
 
-			return (R) getFunc(name, type).getFunction().invoke((DynamicObject<Object>) owner, args);
+			return (R) getFunc(name, type).getFunc().invoke((DynamicObject<Object>) owner, args);
 		}
 	}
 }

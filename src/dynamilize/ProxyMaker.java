@@ -197,7 +197,7 @@ public abstract class ProxyMaker {
 			res.name = functionEntry.getName();
 			res.type = functionEntry.getType();
 			res.entry = functionEntry;
-			res.function = functionEntry.getFunction();
+			res.function = functionEntry.getFunc();
 
 			return res;
 		}

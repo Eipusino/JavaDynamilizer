@@ -49,18 +49,22 @@ import static dynamilize.classmaker.CodeBlock.stack;
 import static dynamilize.runtimeannos.FuzzyMatch.Exact.INSTANCE;
 
 /**
- * 动态类型运作的核心工厂类型，用于将传入的动态类型与委托基类等构造出动态委托类型以及其实例。
- * <p>定义了基于{@link ASMGenerator}的默认生成器实现
- * <p>若需要特殊的实现，则需要重写/实现此类的方法，主要的方法：
+ * The core factory type of dynamic type operation is used to construct dynamic delegate types and their
+ * instances by combining the passed dynamic types with delegate base classes.
+ * <p>Defined a default generator implementation based on {@link ASMGenerator}.
+ * <p>If a special implementation is required, it is necessary to rewrite/implement such methods, mainly through:
  * <ul>
- * <li><strong>{@link DynamicMaker#makeClassInfo(Class, Class[], Class[])}</strong>：决定此工厂如何构造委托类的描述信息
- * <li><strong>{@link DynamicMaker#generateClass(Class, Class[], Class[])}</strong>：决定如何解析描述信息生成字节码以及如何加载字节码为java类
+ * <li><strong>{@link DynamicMaker#makeClassInfo(Class, Class[], Class[])}</strong>: Determine how this factory constructs the description
+ * information of the delegation class
+ * <li><strong>{@link DynamicMaker#generateClass(Class, Class[], Class[])}</strong>: Deciding how to parse descriptive information to
+ * generate bytecode and how to load bytecode into Java classes
  * </ul>
- * 实施时必须按照方法的描述给出基本的实现，不应该改变原定的最低上下文请求。
+ * When implementing, the basic implementation must be provided according to the method description,
+ * and the original minimum context request should not be changed.
  * <pre>
- * 使用方法可参阅：
+ * For usage instructions, please refer to:
  *   {@link DynamicClass}
- * DynamicMaker的方法：
+ * The method of DynamicMaker:
  *   {@link DynamicMaker#newInstance(DynamicClass)}
  *   {@link DynamicMaker#newInstance(Class[], Class[], DynamicClass)}
  *   {@link DynamicMaker#newInstance(Class, Class[], DynamicClass, Object...)}
@@ -136,7 +140,8 @@ public abstract class DynamicMaker {
 	private final HashMap<Class<?>, DataPool> wrapClassPoolMap = new HashMap<>();
 
 	/**
-	 * 创建一个实例，并传入其要使用的{@linkplain JavaHandleHelper java行为支持器}，子类引用此构造器可能直接设置默认的行为支持器而无需外部传入
+	 * Create an instance and pass in the {@linkplain JavaHandleHelper Java Behavior Supporter} it wants to use. Subclass references this
+	 * constructor, which may directly set the default behavior supporter without external input.
 	 */
 	protected DynamicMaker(JavaHandleHelper helper) {
 		this.helper = helper;
@@ -149,7 +154,7 @@ public abstract class DynamicMaker {
 		wrapClassPoolMap.clear();
 	}
 
-	/** 将传入的对象包装为一个{@link WrappedObject} */
+	/** Wrap the incoming object as a {@link WrappedObject} */
 	public <T> DynamicObject<T> wrapInstance(T object) {
 		Class<?> curr = object.getClass();
 
@@ -188,7 +193,7 @@ public abstract class DynamicMaker {
 	}
 
 	/**
-	 * 构造一个派生自{@link Object}的全委托动态实例
+	 * Construct a fully delegated dynamic instance derived from {@link Object}.
 	 *
 	 * @see DynamicMaker#newInstance(Class, Class[], Class[], DynamicClass, Object...)
 	 */
@@ -197,7 +202,7 @@ public abstract class DynamicMaker {
 	}
 
 	/**
-	 * 从给出的参数列表构造一个全委托动态实例
+	 * Construct a fully delegated dynamic instance from the given parameter list.
 	 *
 	 * @see DynamicMaker#newInstance(Class, Class[], Class[], DynamicClass, Object...)
 	 */
@@ -206,8 +211,9 @@ public abstract class DynamicMaker {
 	}
 
 	/**
-	 * 用给出的接口列表构造动态实例
-	 * <p>给出的{@linkplain AspectInterface 切面接口}表会决定这个实例被动态化的行为，若为null（<strong>非空数组，空数组表明不执行委托</strong>）则为全委托。
+	 * Construct dynamic instances using the provided interface list.
+	 * <p>The given {@linkplain AspectInterface AspectInterface} table will determine the dynamic behavior of this instance. If it is null (<strong>non
+	 * empty array, empty array indicates not executing delegation</strong>), it is a full delegation.
 	 *
 	 * @see DynamicMaker#newInstance(Class, Class[], Class[], DynamicClass, Object...)
 	 */
@@ -216,7 +222,9 @@ public abstract class DynamicMaker {
 	}
 
 	/**
-	 * 用给出的构造函数参数构造全委托动态类的实例，参数表必须可以在委托的java类型中存在匹配的可用构造器。实例无额外接口，类型委托由参数确定
+	 * Construct an instance of a fully delegated dynamic class using the given constructor parameters,
+	 * and the parameter table must have a matching available constructor in the delegated Java type. The
+	 * instance has no additional interfaces, and the type delegation is determined by parameters.
 	 *
 	 * @see DynamicMaker#newInstance(Class, Class[], Class[], DynamicClass, Object...)
 	 */
@@ -225,8 +233,11 @@ public abstract class DynamicMaker {
 	}
 
 	/**
-	 * 用给出的构造函数参数构造动态类的实例，参数表必须可以在委托的java类型中存在匹配的可用构造器。实例无额外接口，类型委托由参数确定
-	 * <p>给出的{@linkplain AspectInterface 切面接口}表会决定这个实例被动态化的行为，若为null（<strong>非空数组，空数组表明不执行委托</strong>）则为全委托。
+	 * Construct an instance of a dynamic class using the given constructor parameters, and the parameter
+	 * table must have a matching available constructor in the delegated Java type. The instance has no
+	 * additional interfaces, and the type delegation is determined by parameters.
+	 * <p>The given {@linkplain AspectInterface AspectInterface} table will determine the dynamic behavior of this instance. If it is null (<strong>non
+	 * empty array, empty array indicates not executing delegation</strong>), it is a full delegation.
 	 *
 	 * @see DynamicMaker#newInstance(Class, Class[], Class[], DynamicClass, Object...)
 	 */
@@ -235,11 +246,16 @@ public abstract class DynamicMaker {
 	}
 
 	/**
-	 * 用给出的构造函数参数构造动态类的实例，参数表必须可以在委托的java类型中存在匹配的可用构造器。实例实现给出的接口列表，类型委托由参数确定
-	 * <p>给出的{@linkplain AspectInterface 切面接口}表会决定这个实例被动态化的行为，若为null（<strong>非空数组，空数组表明不执行委托</strong>）则为全委托。
-	 * <p>详见{@link AspectInterface}
+	 * Construct an instance of a dynamic class using the given constructor parameters, and the parameter
+	 * table must have a matching available constructor in the delegated Java type. The interface list
+	 * provided by the instance implementation, with type delegation determined by parameters.
+	 * <p>The given {@linkplain AspectInterface AspectInterface} table will determine the dynamic behavior of this instance. If it is null (<strong>non
+	 * empty array, empty array indicates not executing delegation</strong>), it is a full delegation.
+	 * <p>See {@link AspectInterface} for details
 	 *
-	 * <p><strong>注意，在您使用切面接口限定委托范围时，必须保证所有的抽象方法（来自抽象类委托及实现的接口）都在切面范围内，否则会抛出错误</strong>
+	 * <p><strong>Note that when you use the slicing interface to limit the scope of delegation, you must ensure
+	 * that all abstract methods (from abstract class delegation and implemented interfaces) are
+	 * within the slicing scope, otherwise an error will be thrown.</strong>
 	 *
 	 * @param base         执行委托的java类型，这将决定此实例可分配到的类型
 	 * @param interfaces   实例实现的接口列表
@@ -329,11 +345,11 @@ public abstract class DynamicMaker {
 				}
 
 				@Override
-				public void setVariable(IVariable var) {
+				public void setVariable(IVariable variable) {
 					if (immutable.get())
 						throw new IllegalHandleException("immutable pool");
 
-					super.setVariable(var);
+					super.setVariable(variable);
 				}
 			};
 

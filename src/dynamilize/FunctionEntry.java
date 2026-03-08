@@ -31,7 +31,7 @@ public class FunctionEntry<S, R> implements IFunctionEntry {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Function<S, R> getFunction() {
+	public Function<S, R> getFunc() {
 		return func;
 	}
 

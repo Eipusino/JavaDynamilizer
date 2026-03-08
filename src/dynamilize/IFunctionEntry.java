@@ -9,7 +9,7 @@ public interface IFunctionEntry {
 	String getName();
 
 	/** Get the reference anonymous function defined by the entrance of this method. */
-	<S, R> Function<S, R> getFunction();
+	<S, R> Function<S, R> getFunc();
 
 	/** Get the formal parameter table type of this method. */
 	FunctionType getType();
