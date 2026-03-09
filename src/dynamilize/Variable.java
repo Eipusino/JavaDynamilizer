@@ -1,14 +1,5 @@
 package dynamilize;
 
-import com.github.eipusino.reference.BooleanReference;
-import com.github.eipusino.reference.ByteReference;
-import com.github.eipusino.reference.CharReference;
-import com.github.eipusino.reference.DoubleReference;
-import com.github.eipusino.reference.FloatReference;
-import com.github.eipusino.reference.IntReference;
-import com.github.eipusino.reference.LongReference;
-import com.github.eipusino.reference.ShortReference;
-
 public class Variable implements IVariable {
 	private final String name;
 	private final Initializer<?> init;
@@ -59,8 +50,8 @@ public class Variable implements IVariable {
 	public boolean get(DynamicObject<?> obj, boolean def) {
 		Object b = get(obj);
 		boolean res = def;
-		if (b instanceof BooleanReference ref) {
-			res = ref.value;
+		if (b instanceof boolean[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a boolean");
 
@@ -71,8 +62,8 @@ public class Variable implements IVariable {
 	public byte get(DynamicObject<?> obj, byte def) {
 		Object b = get(obj);
 		byte res = def;
-		if (b instanceof ByteReference ref) {
-			res = ref.value;
+		if (b instanceof byte[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a byte");
 
@@ -83,8 +74,8 @@ public class Variable implements IVariable {
 	public short get(DynamicObject<?> obj, short def) {
 		Object b = get(obj);
 		short res = def;
-		if (b instanceof ShortReference ref) {
-			res = ref.value;
+		if (b instanceof short[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a short");
 
@@ -95,8 +86,8 @@ public class Variable implements IVariable {
 	public int get(DynamicObject<?> obj, int def) {
 		Object b = get(obj);
 		int res = def;
-		if (b instanceof IntReference ref) {
-			res = ref.value;
+		if (b instanceof int[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a integer");
 
@@ -107,8 +98,8 @@ public class Variable implements IVariable {
 	public long get(DynamicObject<?> obj, long def) {
 		Object b = get(obj);
 		long res = def;
-		if (b instanceof LongReference ref) {
-			res = ref.value;
+		if (b instanceof long[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a long");
 
@@ -119,8 +110,8 @@ public class Variable implements IVariable {
 	public float get(DynamicObject<?> obj, float def) {
 		Object b = get(obj);
 		float res = def;
-		if (b instanceof FloatReference ref) {
-			res = ref.value;
+		if (b instanceof float[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a float");
 
@@ -131,8 +122,8 @@ public class Variable implements IVariable {
 	public double get(DynamicObject<?> obj, double def) {
 		Object b = get(obj);
 		double res = def;
-		if (b instanceof DoubleReference ref) {
-			res = ref.value;
+		if (b instanceof double[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a double");
 
@@ -143,8 +134,8 @@ public class Variable implements IVariable {
 	public char get(DynamicObject<?> obj, char def) {
 		Object b = get(obj);
 		char res = def;
-		if (b instanceof CharReference ref) {
-			res = ref.value;
+		if (b instanceof char[] arr && arr.length == 1) {
+			res = arr[0];
 		} else if (b != null)
 			throw new IllegalHandleException("variable " + name + " in object " + obj + " was not a char");
 
@@ -153,89 +144,73 @@ public class Variable implements IVariable {
 
 	@Override
 	public void set(DynamicObject<?> obj, boolean value) {
-		if (get(obj) instanceof BooleanReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof boolean[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			BooleanReference ref = new BooleanReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new boolean[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, byte value) {
-		if (get(obj) instanceof ByteReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof byte[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			ByteReference ref = new ByteReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new byte[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, short value) {
-		if (get(obj) instanceof ShortReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof short[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			ShortReference ref = new ShortReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new short[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, int value) {
-		if (get(obj) instanceof IntReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof int[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			IntReference ref = new IntReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new int[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, long value) {
-		if (get(obj) instanceof LongReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof long[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			LongReference ref = new LongReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new long[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, float value) {
-		if (get(obj) instanceof FloatReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof float[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			FloatReference ref = new FloatReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new float[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, double value) {
-		if (get(obj) instanceof DoubleReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof double[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			DoubleReference ref = new DoubleReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new double[]{value});
 		}
 	}
 
 	@Override
 	public void set(DynamicObject<?> obj, char value) {
-		if (get(obj) instanceof CharReference ref) {
-			ref.value = value;
+		if (get(obj) instanceof char[] arr && arr.length == 1) {
+			arr[0] = value;
 		} else {
-			CharReference ref = new CharReference();
-			ref.value = value;
-			set(obj, ref);
+			set(obj, new char[]{value});
 		}
 	}
 }
