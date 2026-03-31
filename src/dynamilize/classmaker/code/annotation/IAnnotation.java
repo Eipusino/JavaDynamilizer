@@ -8,7 +8,7 @@ public interface IAnnotation<A extends Annotation> {
 
 	Map<String, Object> pairs();
 
-	/** 仅在已有类型标识上可用 */
+	/** Only available on existing type identifiers. */
 	A asAnnotation();
 
 	<T> T getAttr(String attr);

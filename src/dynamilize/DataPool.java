@@ -141,13 +141,16 @@ public class DataPool {
 	}
 
 	/**
-	 * 将类层次结构中定义的函数输出为函数入口，会优先查找类型签名相同的函数，若未查找到相同的才会转入类型签名匹配的函数，
-	 * 因此调用函数在性能需求较高的情况下，建议对实参列表明确声明类型的签名，这可以有效提高重载决策的速度
-	 * <p>如果函数没有被定义则返回空
+	 * Output the function defined in the class hierarchy as the function entry, and prioritize searching for
+	 * functions with the same type signature. If no identical function is found, the function will be
+	 * transferred to a type signature matching function. Therefore, when calling a function with high
+	 * performance requirements, it is recommended to explicitly state the type signature on the actual
+	 * parameter column, which can effectively improve the speed of overload decision-making.
+	 * <p>If the function is not defined, return null.
 	 *
-	 * @param name 函数的名称
-	 * @param type 函数的参数类型
-	 * @return 选中函数的函数入口
+	 * @param name The name of the function
+	 * @param type Parameter types of functions
+	 * @return Select the function entry of the selected function
 	 */
 	public IFunctionEntry select(String name, FunctionType type) {
 		Map<FunctionType, IFunctionEntry> map;
@@ -196,7 +199,7 @@ public class DataPool {
 		return TMP_LIS.toArray(EMP_METS);
 	}
 
-	/** 获得池的只读对象 */
+	/** Obtain read-only objects for the pool. */
 	public <S> ReadOnlyPool getReader(DynamicObject<S> owner) {
 		return new ReadOnlyPool(this, owner, null);
 	}

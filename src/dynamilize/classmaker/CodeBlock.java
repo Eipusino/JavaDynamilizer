@@ -48,7 +48,8 @@ import static dynamilize.classmaker.ClassInfo.VOID_TYPE;
 import static dynamilize.classmaker.ClassInfo.asType;
 
 /**
- * 描述方法具体行为的代码块对象，方法被分解为{@linkplain Element 基本行为}串联的线性结构，提供了快速添加行为的方法
+ * A code block object that describes the specific behavior of a method, which is decomposed into a linear
+ * structure of {@linkplain Element basic behavior} concatenated, providing a fast way to add behavior.
  *
  * @author EBwilson
  */
@@ -104,13 +105,13 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 		this.method = method;
 	}
 
-	protected void initParams(IClass<?> self, List<Parameter<?>> params) {
+	protected void initParams(IClass<?> self, List<ParameterInfo<?>> params) {
 		if (!Modifier.isStatic(method.modifiers())) {
 			selfPointer = new Local<>("this", Modifier.FINAL, self);
 			parameter.add(selfPointer);
 		}
 
-		for (Parameter<?> param : params) {
+		for (ParameterInfo<?> param : params) {
 			parameter.add(
 					new Local<>(param.name(), param.modifiers(), param.getType())
 			);
@@ -162,10 +163,10 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 	}
 
 	/**
-	 * 获取方法的参数的局部变量，索引为此参数在参数列表中的位置，对于非静态方法，索引0号位置为this指针
+	 * Get the local variable of the method's parameters, index the position of this parameter in the parameter list, and for non-static methods, index 0 is the 'this' pointer.
 	 *
-	 * @param index 此参数在形式参数列表中的位置，非静态方法的0索引处为this指针
-	 * @param <T>   参数的类型
+	 * @param index The position of this parameter in the formal parameter list is the 'this' pointer at the 0 index of the non-static method
+	 * @param <T>   Type of parameter
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> ILocal<T> getParam(int index) {
@@ -173,10 +174,12 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 	}
 
 	/**
-	 * 获取方法的参数的局部变量，索引为此参数在参数列表中的位置，不同于{@link CodeBlock#getParam(int)}，索引0处是第一个形参而不是this
+	 * Get the local variable of the method's parameters, index the position of this parameter in the
+	 * parameter list, different from {@link CodeBlock#getParam(int)}, where index 0 is the first formal parameter instead
+	 * of this.
 	 *
-	 * @param index 此参数在形式参数列表中的位置
-	 * @param <T>   参数的类型
+	 * @param index The position of this parameter in the formal parameter list
+	 * @param <T>   Type of parameter
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> ILocal<T> getRealParam(int index) {
@@ -215,11 +218,11 @@ public class CodeBlock<R> implements ICodeBlock<R> {
 	}
 
 	/**
-	 * 将目标对象的指定属性赋值为给出的局部变量的值
+	 * Assign the specified property of the target object to the value of the given local variable
 	 *
-	 * @param tar 保存要设置字段的目标对象的局部变量
-	 * @param src 设置值的来源局部变量
-	 * @param to  需要被写入值的字段
+	 * @param tar Save the local variables of the target object for the field to be set
+	 * @param src Set the source local variable of the value
+	 * @param to  Fields that need to be written with values
 	 */
 	public final <S, T extends S> void assign(ILocal<?> tar, ILocal<S> src, IField<T> to) {
 		codes().add(

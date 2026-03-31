@@ -4,7 +4,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * 保存类的超类及实现接口的容器，用于快速确认委托的构造类型
+ * A container for storing superclasses of classes and implementing interfaces, used to quickly confirm the
+ * construction type of delegation.
  *
  * @author EBwilson
  */

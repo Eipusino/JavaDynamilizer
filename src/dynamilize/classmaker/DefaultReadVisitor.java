@@ -41,48 +41,37 @@ public class DefaultReadVisitor implements ElementVisitor {
 	}
 
 	@Override
-	public void visitField(IField<?> field) {
-	}
+	public void visitField(IField<?> field) {}
 
 	@Override
-	public void visitLocal(ILocal<?> local) {
-	}
+	public void visitLocal(ILocal<?> local) {}
 
 	@Override
-	public void visitInvoke(IInvoke<?> invoke) {
-	}
+	public void visitInvoke(IInvoke<?> invoke) {}
 
 	@Override
-	public void visitGetField(IGetField<?, ?> getField) {
-	}
+	public void visitGetField(IGetField<?, ?> getField) {}
 
 	@Override
-	public void visitPutField(IPutField<?, ?> putField) {
-	}
+	public void visitPutField(IPutField<?, ?> putField) {}
 
 	@Override
-	public void visitLocalSet(ILocalAssign<?, ?> localSet) {
-	}
+	public void visitLocalSet(ILocalAssign<?, ?> localSet) {}
 
 	@Override
-	public void visitOperate(IOperate<?> operate) {
-	}
+	public void visitOperate(IOperate<?> operate) {}
 
 	@Override
-	public void visitCast(ICast cast) {
-	}
+	public void visitCast(ICast cast) {}
 
 	@Override
-	public void visitGoto(IGoto iGoto) {
-	}
+	public void visitGoto(IGoto iGoto) {}
 
 	@Override
-	public void visitLabel(IMarkLabel label) {
-	}
+	public void visitLabel(IMarkLabel label) {}
 
 	@Override
-	public void visitCompare(ICompare<?> compare) {
-	}
+	public void visitCompare(ICompare<?> compare) {}
 
 	@Override
 	public void visitCodeBlock(ICodeBlock<?> codeBlock) {
@@ -92,46 +81,35 @@ public class DefaultReadVisitor implements ElementVisitor {
 	}
 
 	@Override
-	public void visitReturn(IReturn<?> iReturn) {
-	}
+	public void visitReturn(IReturn<?> iReturn) {}
 
 	@Override
-	public void visitInstanceOf(IInstanceOf instanceOf) {
-	}
+	public void visitInstanceOf(IInstanceOf instanceOf) {}
 
 	@Override
-	public void visitNewInstance(INewInstance<?> newInstance) {
-	}
+	public void visitNewInstance(INewInstance<?> newInstance) {}
 
 	@Override
-	public void visitOddOperate(IOddOperate<?> operate) {
-	}
+	public void visitOddOperate(IOddOperate<?> operate) {}
 
 	@Override
-	public void visitConstant(ILoadConstant<?> loadConstant) {
-	}
+	public void visitConstant(ILoadConstant<?> loadConstant) {}
 
 	@Override
-	public void visitNewArray(INewArray<?> newArray) {
-	}
+	public void visitNewArray(INewArray<?> newArray) {}
 
 	@Override
-	public void visitCondition(ICondition condition) {
-	}
+	public void visitCondition(ICondition condition) {}
 
 	@Override
-	public void visitArrayGet(IArrayGet<?> arrayGet) {
-	}
+	public void visitArrayGet(IArrayGet<?> arrayGet) {}
 
 	@Override
-	public void visitArrayPut(IArrayPut<?> arrayPut) {
-	}
+	public void visitArrayPut(IArrayPut<?> arrayPut) {}
 
 	@Override
-	public void visitSwitch(ISwitch<?> zwitch) {
-	}
+	public void visitSwitch(ISwitch<?> zwitch) {}
 
 	@Override
-	public void visitThrow(IThrow<?> thr) {
-	}
+	public void visitThrow(IThrow<?> thr) {}
 }

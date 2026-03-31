@@ -8,8 +8,9 @@ import dynamilize.classmaker.code.annotation.AnnotatedElement;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 
-public class Parameter<T> extends AnnotatedMember implements AnnotatedElement {
+public class ParameterInfo<T> extends AnnotatedMember implements AnnotatedElement {
 	final IClass<T> type;
 	IMethod<?, ?> method;
 
@@ -24,10 +25,10 @@ public class Parameter<T> extends AnnotatedMember implements AnnotatedElement {
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static Parameter<?>[] as(Object... infos) {
-		Parameter<?>[] res = new Parameter[infos.length / 3];
+	public static ParameterInfo<?>[] as(Object... infos) {
+		ParameterInfo<?>[] res = new ParameterInfo[infos.length / 3];
 		for (int i = 0; i < infos.length; i += 3) {
-			res[i / 3] = new Parameter<>(
+			res[i / 3] = new ParameterInfo<>(
 					((Number) infos[i]).intValue(),
 					infos[i + 1] instanceof IClass ? (IClass) infos[i + 1] : ClassInfo.asType((Class<?>) infos[i + 1]),
 					(String) infos[i + 2]
@@ -37,25 +38,25 @@ public class Parameter<T> extends AnnotatedMember implements AnnotatedElement {
 		return res;
 	}
 
-	public static Parameter<?>[] trans(IClass<?>... types) {
-		Parameter<?>[] res = new Parameter[types.length];
+	public static ParameterInfo<?>[] trans(IClass<?>... types) {
+		ParameterInfo<?>[] res = new ParameterInfo[types.length];
 		for (int i = 0; i < res.length; i++) {
-			res[i] = new Parameter<>(0, types[i], "$param$" + i);
+			res[i] = new ParameterInfo<>(0, types[i], "$param$" + i);
 		}
 
 		return res;
 	}
 
-	public static Parameter<?>[] asParameter(java.lang.reflect.Parameter... params) {
-		Parameter<?>[] res = new Parameter[params.length];
+	public static ParameterInfo<?>[] asParameter(java.lang.reflect.Parameter... params) {
+		ParameterInfo<?>[] res = new ParameterInfo[params.length];
 		for (int i = 0; i < res.length; i++) {
-			res[i] = new Parameter<>(params[i].getModifiers(), ClassInfo.asType(params[i].getType()), params[i].getName());
+			res[i] = new ParameterInfo<>(params[i].getModifiers(), ClassInfo.asType(params[i].getType()), params[i].getName());
 		}
 
 		return res;
 	}
 
-	public Parameter(int modifiers, IClass<T> type, String name) {
+	public ParameterInfo(int modifiers, IClass<T> type, String name) {
 		super(name);
 		setModifiers(modifiers);
 		this.type = type;
@@ -101,7 +102,7 @@ public class Parameter<T> extends AnnotatedMember implements AnnotatedElement {
 			throw new IllegalHandleException("only get annotation object in existed type info");
 
 		try {
-			for (java.lang.reflect.Parameter parameter : clazz.getDeclaredMethod(method.name(), method.parameters().stream().map(e -> e.getType().getTypeClass()).toArray(Class[]::new)).getParameters()) {
+			for (Parameter parameter : clazz.getDeclaredMethod(method.name(), method.parameters().stream().map(e -> e.getType().getTypeClass()).toArray(Class[]::new)).getParameters()) {
 				if (parameter.getName().equals(name())) return parameter.getAnnotation(annoClass);
 			}
 		} catch (NoSuchMethodException e) {

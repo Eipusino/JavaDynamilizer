@@ -1,7 +1,8 @@
 package dynamilize;
 
 /**
- * 变量计算器，函数式接口，用于对变量的当前值进行一系列处理后提供回调
+ * Variable calculator, a functional interface used to process the current value of a variable and provide
+ * callbacks.
  *
  * @author EBwilson
  */

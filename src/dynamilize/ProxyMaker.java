@@ -7,20 +7,27 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * 代理创建工具，用于生成类似{@linkplain  java.lang.reflect.Proxy java代理工具}的面向切面代理实例，但不同的是这允许从类型进行委托，类似于<i>cglib</i>。
- * <p>通过此工具创建的代理实例会将所有可用（非static/final/private/package private）方法调用转入代理调用处理器，在此工具中被声明为了{@link ProxyMaker#invoke(DynamicObject, FuncMarker, FuncMarker, ArgumentList)}])}。
- * <p>使用此工具时需要给出一个{@link DynamicMaker}用于构建动态代理实例，尽管可能你需要的只是具备代理行为的{@linkplain DynamicClass 动态类型}。
- * <p>另外，动态类型中声明的函数也会被代理拦截，作用时机与动态类实例化的行为影响是一致的，请参阅{@link DynamicClass 动态类型函数变更的作用时机}
- * <p>你可以使用lambda表达式引用{@link ProxyMaker#getDefault(DynamicMaker, ProxyHandler)}获取默认的lambda实现，
- * 或者实现此类的抽象方法{@link ProxyMaker#invoke(DynamicObject, FuncMarker, FuncMarker, ArgumentList)}。
+ * Proxy creation tool, used to generate aspect oriented proxy instances similar to {@linkplain java.lang.reflect.Proxy java proxy tool}, but
+ * different in that it allows delegation from type, similar to <i>cglib</i>.
+ * <p>The proxy instance created through this tool will transfer all available (non
+ * {@code static}/{@code final}/{@code private}/{@code package private}) method calls into the proxy call handler, which is
+ * declared as {@link ProxyMaker#invoke(DynamicObject, FuncMarker, FuncMarker, ArgumentList)}.
+ * <p>When using this tool, you need to provide a {@link DynamicMaker} to build a dynamic proxy instance, although
+ * you may only need a {@linkplain DynamicClass dynamic type} with proxy behavior.
+ * <p>In addition, functions declared in dynamic types will also be intercepted by proxies, and their timing of
+ * action is consistent with the behavior of dynamic class instantiation. Please refer to
+ * {@link DynamicClass The timing of dynamic type function changes}.
+ * <p>You can use lambda expressions to reference {@link ProxyMaker#getDefault(DynamicMaker, ProxyHandler)}
+ * to obtain the default lambda implementation, or implement abstract methods of this kind
+ * {@link ProxyMaker#invoke(DynamicObject, FuncMarker, FuncMarker, ArgumentList)}.
  * <pre>{@code
- * 一个简单的用例：
+ * // A simple use case:
  * ArrayList list = ProxyMaker.getDefault(DynamicMaker.getDefault(), (self, method, args) -> {
- *   System.out.println(method);
- *   return method.invoke(self, args);
+ *     System.out.println(method);
+ *     return method.invoke(self, args);
  * }).newProxyInstance(ArrayList.class).self();
  *
- * 这个list的所有可用方法在执行时都将会打印方法本身的签名
+ * // All available methods on this list will print the signature of the method itself when executed
  * }</pre>
  *
  * @author EBwilson
@@ -40,11 +47,13 @@ public abstract class ProxyMaker {
 	}
 
 	/**
-	 * 获取代理生成器的默认实现实例，需要提供一个{@linkplain DynamicMaker 动态生成器}以构建实例
+	 * To obtain the default implementation instance of the proxy generator, a {@linkplain DynamicMaker dynamic generator} needs
+	 * to be provided to build the instance.
 	 *
-	 * @param maker        创建动态对象使用的生成器
-	 * @param proxyHandler 用于代理处理的{@link ProxyMaker#invoke(DynamicObject, FuncMarker, FuncMarker, ArgumentList)}方法拦截，所有有效方法调用都会被拦截并传入此方法
-	 * @return 默认实例
+	 * @param maker        Generator used for creating dynamic objects
+	 * @param proxyHandler Intercept the {@link ProxyMaker#invoke(DynamicObject, FuncMarker, FuncMarker, ArgumentList)} method
+	 *                     used for proxy processing, and all valid method calls will be intercepted and passed into this method.
+	 * @return default instance
 	 */
 	public static ProxyMaker getDefault(DynamicMaker maker, ProxyHandler proxyHandler) {
 		return new ProxyMaker(maker) {
@@ -84,13 +93,14 @@ public abstract class ProxyMaker {
 	}
 
 	/**
-	 * 创建一个代理实例，它的所有有效方法都已被提供的代理处理器拦截
+	 * Create a proxy instance where all valid methods have been intercepted by the provided proxy
+	 * processor.
 	 *
-	 * @param base         代理委托的java基类，代理实例可以正确的分配给此类型
-	 * @param interfaces   代理实现的接口列表，所有方法均会实现以调用代理处理函数
-	 * @param dynamicClass 代理实例的动态类型，可以为空
-	 * @param args         代理委托的类型中可用的构造函数的参数
-	 * @return 一个代理实例
+	 * @param base         The Java base class for proxy delegation, and proxy instances can be correctly assigned to this type
+	 * @param interfaces   List of interfaces implemented by the proxy, all methods will be implemented to call the proxy handling function
+	 * @param dynamicClass The dynamic type of the proxy instance can be null
+	 * @param args         Parameters of Constructors Available in Proxy Delegation Types
+	 * @return A proxy instance
 	 */
 	public <T> DynamicObject<T> newProxyInstance(Class<T> base, Class<?>[] interfaces, Class<?>[] aspects, DynamicClass dynamicClass, Object... args) {
 		DynamicClass dyClass = getProxyDyClass(dynamicClass, base, interfaces, aspects);
@@ -99,12 +109,13 @@ public abstract class ProxyMaker {
 	}
 
 	/**
-	 * 从类和接口实现获取声明为代理的动态类型，参数给出的动态类型会作为该类型的直接超类，可以为空
+	 * Obtain dynamic types declared as proxies from class and interface implementations, and the
+	 * dynamic types given by parameters will serve as direct superclass of that type, which can be empty.
 	 *
-	 * @param dynamicClass 结果动态类型的直接超类，为空时表示类型超类不明确
-	 * @param base         委托基类
-	 * @param interfaces   代理实现的接口
-	 * @return 声明为代理实现的动态类型
+	 * @param dynamicClass When the direct superclass of the result dynamic type is empty, it indicates that the type superclass is not clear
+	 * @param base         Delegate base class
+	 * @param interfaces   Proxy implemented interface
+	 * @return Declare dynamic types implemented as proxies
 	 */
 	private <T> DynamicClass getProxyDyClass(DynamicClass dynamicClass, Class<T> base, Class<?>[] interfaces, Class<?>[] aspects) {
 		ClassImplements<T> impl = new ClassImplements<>(base, interfaces, aspects);
@@ -161,20 +172,23 @@ public abstract class ProxyMaker {
 	}
 
 	/**
-	 * 代理处理器，所有被代理的方法执行被拦截都会转入该方法，方法/函数都会以一个匿名函数的形式传递给这个方法
-	 * <p>默认实现调用会传入给出的匿名函数，否则子类应当按需要的代理处理方式实现此方法
+	 * Proxy processor, all methods intercepted by the proxy will be transferred to this method, and
+	 * methods/functions will be passed to this method in the form of an anonymous function.
+	 * <p>The default implementation call will pass the given anonymous function, otherwise subclasses
+	 * should implement this method according to the required proxy processing method.
 	 *
-	 * @param proxy  动态代理实例
-	 * @param method 被拦截的方法
-	 * @param args   实参列表
-	 * @return 返回值
+	 * @param proxy  Dynamic proxy instance
+	 * @param method Methods of interception
+	 * @param args   Actual parameter list
+	 * @return return value
 	 */
 	protected abstract Object invoke(DynamicObject<?> proxy, FuncMarker method, FuncMarker proxiedMethod, ArgumentList args);
 
 	/**
-	 * 异常处理器，当代理运行中发生任何异常都会转入此方法进行处理，默认直接封装为RuntimeException抛出
+	 * Exception handler, this method is used to handle any exceptions that occur during proxy operation.
+	 * By default, it is directly encapsulated as a Runtime Exception and thrown.
 	 *
-	 * @param thr 运行过程中捕获的异常
+	 * @param thr Anomalies captured during operation
 	 */
 	public void throwException(Throwable thr) {
 		throw new RuntimeException(thr);

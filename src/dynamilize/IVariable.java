@@ -9,7 +9,7 @@ public interface IVariable {
 
 	void set(DynamicObject<?> obj, Object value);
 
-	//primitive getters
+	// primitive getters
 	boolean get(DynamicObject<?> obj, boolean def);
 
 	byte get(DynamicObject<?> obj, byte def);
@@ -26,7 +26,7 @@ public interface IVariable {
 
 	char get(DynamicObject<?> obj, char def);
 
-	//primitive setters
+	// primitive setters
 	void set(DynamicObject<?> obj, boolean value);
 
 	void set(DynamicObject<?> obj, byte value);

@@ -1,7 +1,7 @@
 package dynamilize.classmaker.code;
 
 import dynamilize.classmaker.ElementVisitor;
-import dynamilize.classmaker.Parameter;
+import dynamilize.classmaker.ParameterInfo;
 import dynamilize.classmaker.code.annotation.AnnotatedElement;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public interface IMethod<S, R> extends Element, AnnotatedElement {
 
 	String typeDescription();
 
-	List<Parameter<?>> parameters();
+	List<ParameterInfo<?>> parameters();
 
 	List<IClass<? extends Throwable>> throwTypes();
 

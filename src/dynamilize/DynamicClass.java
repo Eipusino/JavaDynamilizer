@@ -12,26 +12,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * 保存动态对象行为信息的动态类型，描述了对象的共有行为和变量信息。
- * <p>在{@link DynamicMaker}的构造实例方法里使用动态类型构造动态对象，动态对象会具有其类型描述的行为，对于基类与动态类中描述的同一方法会正常的处理覆盖关系。
- * <p>不同于为对象设置的函数，在动态类中描述的方法，对于所有此类的实例都是共用的，即：
+ * The dynamic type that stores dynamic object behavior information describes the shared behavior and
+ * variable information of the object.
+ * <p>In the instance construction method of {@link DynamicMaker}, dynamic types are used to construct dynamic
+ * objects, which will have the behavior described by their types. The same method described in the base
+ * class and dynamic class will handle the overlay relationship normally.
+ * <p>Unlike functions set for objects, methods described in dynamic classes are common to all instances of this class, i.e.:
  * <ul>
- * <li><strong>当对象的动态类型的某一方法发生变更时，对象的此方法行为也会改变，且变更会即时生效</strong>
- * <li><strong>当动态类的超类的方法行为发生变更时，若类的行为中引用了超类方法，则类的行为会随之改变</strong>
- * <p><strong>仅在动态对象的方法来自动态类描述的行为时，上述变更才会生效</strong>
+ * <li><strong>When a method of an object's dynamic type changes, the behavior of that method will also
+ * change, and the change will take effect immediately.</strong>
+ * <li><strong>When the method behavior of a superclass in a dynamic class changes, if the superclass method is
+ * referenced in the class's behavior, the class's behavior will change accordingly.</strong>
+ * <p><strong>The above changes will only take effect when the methods of the dynamic object come from the
+ * behavior described by the dynamic class.</strong>
  * </ul>
- * <p>描述动态类的行为需要{@linkplain DynamicClass#visitClass(Class, JavaHandleHelper) 行为样版}或者函数表达式，以增量模式编辑类型行为，方法和默认变量只能新增/变更，不可删除
+ * <p>Describing the behavior of dynamic classes requires {@linkplain DynamicClass#visitClass(Class, JavaHandleHelper) behavior template} or function expressions to edit
+ * type behavior in incremental mode. Methods and default variables can only be added/changed and
+ * cannot be deleted.
  * <pre>{@code
- * //下面是一个简单的样例:
- * public class Template{
+ * // Here is a simple example:
+ * public class Template {
  *     public static String str = "string0";
  *
- *     public static void method(@This final DynamicObject self, String arg0){
+ *     public static void method(@This final DynamicObject self, String arg0) {
  *         System.out.println(self.getVar(arg0));
  *     }
  * }
  *
- * //引用：
+ * // quote:
  * DynamicMaker maker = DynamicMaker.getDefault();
  * DynamicClass dyClass = DynamicClass.get("Sample");
  * dyClass.visitClass(Template.class, maker.getHelper());
@@ -41,7 +49,8 @@ import java.util.HashMap;
  * >>> string0
  * }</pre>
  *
- * <strong>动态类型声明的变量初始值只在对象被创建时有效，任何时候改变类的变量初始值都不会对已有实例造成影响</strong>
+ * <strong>The initial value of a variable declared by a dynamic type is only valid when the object is created,
+ * and changing the initial value of a class variable at any time will not affect existing instances.</strong>
  *
  * @author EBwilson
  * @see DynamicMaker#newInstance(Class, Class[], DynamicClass, Object...)
@@ -50,27 +59,32 @@ import java.util.HashMap;
  * @see DynamicMaker#newInstance(Class, DynamicClass, Object...)
  */
 public class DynamicClass {
-	/** 保存了所有动态类的实例，通常情况下动态类型只有在主动删除时才会退出池，对于废弃的类，请切记使用{@link DynamicClass#delete()}删除，否则会造成内存泄漏 */
+	/**
+	 * All instances of dynamic classes have been saved. Typically, dynamic types only exit the pool when
+	 * actively deleted. For obsolete classes, please remember to use {@link DynamicClass#delete()} to delete them, otherwise
+	 * it may cause memory leaks.
+	 */
 	private static final HashMap<String, DynamicClass> classPool = new HashMap<>();
 
-	/** 类型的唯一限定名称 */
+	/** Unique qualified name of type. */
 	private final String name;
 
-	/** 此动态类的直接超类 */
+	/** The direct superclass of this dynamic class. */
 	private final DynamicClass superDyClass;
 
 	private final DataPool data;
 
-	/** 废弃标记，在类型已废弃后，不可再实例化此类型 */
+	/** Abandoned tag: After the type has been abandoned, it cannot be instantiated again. */
 	private boolean isObsoleted;
 
 	/**
-	 * 声明一个动态类型，如果此名称指明的类型不存在则使用给出的名称创建一个新的动态类
+	 * Declare a dynamic type, and if the type indicated by this name does not exist, create a new dynamic
+	 * class using the given name.
 	 *
-	 * @param name         类型的唯一限定名称
-	 * @param superDyClass 此动态类型的直接超类
-	 * @return 一个具有指定名称的动态类实例
-	 * @throws IllegalHandleException 如果具有 该名称的类型已经存在
+	 * @param name         Unique qualified name of type
+	 * @param superDyClass The direct superclass of this dynamic type
+	 * @return A dynamic class instance with a specified name
+	 * @throws IllegalHandleException If a type with that name already exists
 	 */
 	public static DynamicClass declare(String name, DynamicClass superDyClass) {
 		if (classPool.containsKey(name))
@@ -82,11 +96,14 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 获取动态类实例，如果此名称指明的类型不存在则使用给出的名称创建一个新的动态类
-	 * <p>从此方法创建的新类没有明确的直接超类，实例将以委托的基类作为直接超类，若需要具有明确的直接超类的类型，请使用{@link DynamicClass#declare(String, DynamicClass)}声明
+	 * Get a dynamic class instance, and if the type indicated by this name does not exist, create a new
+	 * dynamic class using the given name.
+	 * <p>The new class created from this method does not have a clear direct superclass. The instance will
+	 * use the delegated base class as the direct superclass. If you need a type with a clear direct
+	 * superclass, please declare it using {@link DynamicClass#declare(String, DynamicClass)}.
 	 *
-	 * @param name 类型的唯一限定名称
-	 * @return 一个具有指定名称的动态类实例
+	 * @param name Unique qualified name of type
+	 * @return A dynamic class instance with a specified name
 	 */
 	public static DynamicClass get(String name) {
 		return classPool.computeIfAbsent(name, n -> new DynamicClass(n, null));
@@ -169,21 +186,36 @@ public class DynamicClass {
 	}
 
 	/**
-	 * 访问一个类作为行为样版，将类中声明的字段/方法用作描述动态类行为，类中声明的<strong>静态成员</strong>将产生如下效果:
+	 * Accessing a class as a behavior template and using the fields/methods declared in the class to
+	 * describe dynamic class behavior, the <strong>static members</strong> declared in the class will produce the
+	 * following effect:
 	 * <ul>
-	 * <li><strong>方法</strong>：为动态类型描述实例共有方法，对于同名同参数的方法若重复传入，则旧的方法会被新的覆盖。
-	 * <p>方法样版会创建为方法入口，当实例的此方法被调用时实际上调用会被转入这个样版方法，this指针会作为一个参数被传递（可选）
-	 * <p>要接收this指针，你需要使用{@link This}注解标记样版方法的第一个参数且参数应当为final，
-	 * 被标记为this指针的参数类型必须为可分配类型（动态实例可确保已实现了接口DynamicObject），此参数不会占据参数表匹配位置：
-	 * <p>例如方法<pre>{@code sample(@This final DynamicObject self, String str)}</pre>可以正确的匹配到对象的函数<pre>{@code sample(String str)}</pre>
-	 * <p><strong>仅有被替换的方法可以改变实例的行为，对于新增的行为将不会影响已存在的实例的行为，新增行为只会使新产生的实例具有此默认函数</strong>
+	 * <li><strong>Method</strong>: Describe instance shared methods for dynamic typing. If methods with the same name
+	 * and parameters are passed in repeatedly, the old methods will be overwritten by the new ones.
+	 * <p>The method template will be created as a method entry, and when this method of the instance is
+	 * called, the call will actually be passed into this template method, and the 'this' pointer will be
+	 * passed as an argument (optional).
+	 * <p>To receive this pointer, you need to annotate the first parameter of the template method with
+	 * {@link This}, and the parameter should be final. The parameter type marked as this pointer must be an
+	 * assignable type (dynamic instance ensures that the interface DynamicObject has been
+	 * implemented), and this parameter will not occupy a matching position in the parameter table:
+	 * <p>For example, the <pre>{@code sample(@This final DynamicObject self, String str)}</pre> method can correctly match functions to objects<pre>{@code sample(String str)}</pre>
+	 * <p><strong>Only the replaced method can change the behavior of the instance. The newly added
+	 * behavior will not affect the behavior of the existing instance. The newly added behavior will
+	 * only make the newly generated instance have this default function.</strong>
 	 *
-	 * <li><strong>字段</strong>：为动态类型描述默认变量表，并以字段在动态对象实例化时存储的值作为该变量的初始数据。
-	 * <p>若字段的类型为{@link Initializer.Producer}，则会将此函数作为值的工厂，初始化动态实例时以函数生产的数据作为变量默认值。
-	 * <p><strong>除作为行为样版被访问之外，其他任何时机变量的值变化都不会对类型的行为产生直接影响</strong>
+	 * <li><strong>Field</strong>: Describes the default variable table for dynamic types, and uses the value stored by the field
+	 * during dynamic object instantiation as the initial data for the variable.
+	 * <p>If the field type is {@link Initializer.Producer}, this function will be used as the factory for the value,
+	 * and the data produced by the function will be used as the default value for the variable when
+	 * initializing the dynamic instance.
+	 * <p><strong>Except for being accessed as a behavioral template, any changes in the value of other timing
+	 * variables will not have a direct impact on the behavior of the type.</strong>
 	 * </ul>
-	 * 如果模板里存在不希望被作为样版的字段或者方法，你可以使用{@link Exclude}注解标记此目标以排除。
-	 * <p><strong>所有描述动态类行为的方法和变量都必须具有public static修饰符</strong>
+	 * If there are fields or methods in the template that you do not want to be used as samples, you can
+	 * use the {@link Exclude} annotation to mark this target for exclusion.
+	 * <p><strong>All methods and variables that describe dynamic class behavior must have the {@code public static}
+	 * modifier</strong>
 	 */
 	public void visitClass(Class<?> template, JavaHandleHelper helper) {
 		checkFinalized();
@@ -208,7 +240,7 @@ public class DynamicClass {
 	/**
 	 * Accessing a method template, unlike visitClass {@link DynamicClass#visitClass(Class, JavaHandleHelper)}, this
 	 * method only accesses a single method and creates its behavior template.
-	 * <p>For the specific behavior of this method, please refer to the {@linkplain  DynamicClass#visitClass(Class, JavaHandleHelper) method section} of the access behavior
+	 * <p>For the specific behavior of this method, please refer to the {@linkplain DynamicClass#visitClass(Class, JavaHandleHelper) method section} of the access behavior
 	 * template type.
 	 *
 	 * @param method Sample version of access method

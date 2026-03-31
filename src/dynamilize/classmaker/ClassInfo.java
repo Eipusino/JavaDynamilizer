@@ -25,34 +25,42 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 类型标识，用于标记/生成一个类对象，通常有以下两种：
+ * Type identification, used to mark/generate a class object, usually has the following two types:
  * <ul>
- *   <li><strong>生成类型标识</strong>生成类型标识在默认情况下（完成类型生成之前）是可变的，用于声明和描述一个新的类型并加载它，是生成一个新的类使用的描述类型
- *   <li><strong>已有类型标识</strong>对已有类型创建的类型标识，不可变，仅用于标记一个已存在的类型以供标记分配和使用
+ *   <li><strong>Generate type identifier</strong> is mutable by default (before type generation is completed), used to declare
+ *   and describe a new type and load it, and is the descriptive type used to generate a new class.
+ *   <li><strong>The type identifier</strong> created for an existing type is immutable and is only used to mark an existing type
+ *   for allocation and use.
  * </ul>
- * 默认构造的类型标记即为生成类型标识，允许声明方法和字段以及构造函数和静态代码快（cinit块）,若生成类型标识完成生成，将转变为对生成的类型的已有类型标识。
- * <p>你将需要以类似汇编语言的思路来进行行为描述，如使用goto代替for和if.
+ * The default constructed type tag is the generated type identifier, which allows declaring methods and
+ * fields, constructors, and static code (cinit block). If the generated type identifier is completed, it will be
+ * transformed into an existing type identifier for the generated type.
+ * <p>You will need to use an assembly language like approach to describe behavior, such as using goto instead
+ * of {@code for} and {@code if}.
  *
- * <p>举一个简单的例子：
+ * <p>Give a simple example:
  * <pre>{@code
- * 有一个类：
- * public class Demo{
- *   public static String INFO = "HelloWorld";
+ * // There is a class:
+ * import java.util.concurrent.ThreadLocalRandom;
  *
- *   public static main(String[] args){
- *     if(System.nanoTime() < 123456789){
- *       System.out.println(INFO);
+ * public class Demo {
+ *     public static String INFO = "HelloWorld";
+ *
+ *     public static main(String[] args) {
+ *         if (ThreadLocalRandom.current().nextInt() < 123456789) {
+ *             System.out.println(INFO);
+ *         } else {
+ *             System.out.println("Late")
+ *         }
  *     }
- *     else System.out.println("Late")
- *   }
  * }
  *
- * 要生成一个等效类型，应做如下描述：
+ * // To generate an equivalent type, the following description should be given:
  *
  * ClassInfo<?> demoInfo = new ClassInfo<>(
  *     Modifier.PUBLIC,
  *     "Demo",
- *     ClassInfo.OBJECT_TYPE//或者为null，默认指向java.lang.Object
+ *     ClassInfo.OBJECT_TYPE //Or null, default points to java.lang.Object
  * );
  *
  * IField<String> INFO = demoInfo.declareField(
@@ -92,9 +100,11 @@ import java.util.Objects;
  * code.loadConstant(lo, "Late");
  * code.invoke(ou, println, null, lo);
  *
- * 对此demoInfo进行生成即可得到等效的类
+ * //Generate this demoInfo to obtain an equivalent class
  * }</pre>
- * 这样的过程是繁琐的，但是也是快速的，跳过编译器产生类文件牺牲了可操作性以换取了类的生成速度，建议将行为描述为模板后再基于模板进行变更以提高开发效率
+ * This process is tedious, but also fast. Skipping the compiler to generate class files sacrifices operability in
+ * exchange for class generation speed. It is recommended to describe the behavior as a template and then
+ * make changes based on the template to improve development efficiency.
  */
 @SuppressWarnings("rawtypes")
 public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
@@ -103,9 +113,9 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 	private static final Map<Class<?>, ClassInfo<?>> classMap = new HashMap<>();
 
-	private static final String OBJECTTYPEMARK = "Ljava/lang/Object;";
+	private static final String OBJECT_TYPE_MARK = "Ljava/lang/Object;";
 	private static final String INIT = "<init>";
-	private static final String CINIT = "<clinit>";
+	private static final String CLINIT = "<clinit>";
 
 	private static final int CLASS_ACCESS_MODIFIERS =
 			Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE |
@@ -129,8 +139,9 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	private static final IClass<? extends Throwable>[] EMP_ARR = new IClass[0];
 
 	/**
-	 * 对于非现有类型标识，此字段通常情况下为null，在完成类的创建和加载后应正确设置为产生的类
-	 * <p>作为已有类型的标识符则一定不为空
+	 * For non-existing type identifiers, this field is usually null and should be correctly set to the generated
+	 * class after completing the creation and loading of the class.
+	 * <p>As an identifier of an existing type, it must not be null.
 	 */
 	private Class<T> clazz;
 
@@ -150,40 +161,74 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 	private AnnotationType<? extends Annotation> annotationType;
 
-	/** 对int的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code int}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Integer> INT_TYPE = new ClassInfo<>(int.class);
 
-	/** 对float的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code float}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Float> FLOAT_TYPE = new ClassInfo<>(float.class);
 
-	/** 对boolean的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code boolean}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Boolean> BOOLEAN_TYPE = new ClassInfo<>(boolean.class);
 
-	/** 对byte的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code byte}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Byte> BYTE_TYPE = new ClassInfo<>(byte.class);
 
-	/** 对short的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code short}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Short> SHORT_TYPE = new ClassInfo<>(short.class);
 
-	/** 对long的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code long}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Long> LONG_TYPE = new ClassInfo<>(long.class);
 
-	/** 对double的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+
+	/**
+	 * For the type identification of {@code double}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Double> DOUBLE_TYPE = new ClassInfo<>(double.class);
 
-	/** 对char的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	/**
+	 * For the type identification of {@code char}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Character> CHAR_TYPE = new ClassInfo<>(char.class);
 
-	/** 对void的类型标识，泛型引用封装数据类型，本身引用仍为基本数据类型 */
+	/**
+	 * For the type identification of {@code void}, generic references encapsulate data types while still referencing
+	 * basic data types.
+	 */
 	public static final ClassInfo<Void> VOID_TYPE = new ClassInfo<>(void.class);
 
-	/** 对{@link Object}的类型标识 */
+	/** Type identification for {@link Object}. */
 	public static final ClassInfo<Object> OBJECT_TYPE = new ClassInfo<>(Object.class);
 
-	/** 对{@link String}的类型标识 */
+	/** Type identification for {@link String}. */
 	public static final ClassInfo<String> STRING_TYPE = asType(String.class);
 
-	/** 对{@link Class}的类型标识 */
+	/** Type identification for {@link Class}. */
 	@SuppressWarnings("rawtypes")
 	public static final ClassInfo<Class> CLASS_TYPE = asType(Class.class);
 
@@ -192,9 +237,10 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	final boolean isPrimitive;
 
 	/**
-	 * 创建一个类型标识用于标记类型，若这个目标类型已经被标记过则会返回那个已有对象标识
+	 * Create a type identifier to mark the type, and if the target type has already been marked, return the
+	 * existing object identifier.
 	 *
-	 * @param clazz 要用于标记的类对象
+	 * @param clazz Class object to be used for tagging
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> ClassInfo<T> asType(Class<T> clazz) {
@@ -221,9 +267,11 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 不应该从外部调用此方法，该方法仅用于传入java基础类型的类对象获得其类型标识，若传入的类型不是基本java类型或者{@link Object}则抛出异常
+	 * This method should not be called externally. It is only used to pass a Java primitive type class object
+	 * to obtain its type identifier. If the passed type is not a primitive Java type or {@link Object}, an exception
+	 * will be thrown.
 	 *
-	 * @param primitive 被标记的基本类型对象
+	 * @param primitive Marked basic type objects
 	 */
 	private ClassInfo(Class<T> primitive) {
 		super(primitive.getName());
@@ -238,7 +286,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 		if (primitive == Object.class) {
 			setModifiers(Modifier.PUBLIC);
 
-			realName = OBJECTTYPEMARK;
+			realName = OBJECT_TYPE_MARK;
 
 			fieldMap = new HashMap<>();
 			methodMap = new HashMap<>();
@@ -269,13 +317,13 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 构建一个生成类型标识的实例，用于动态生成类
+	 * Build an instance that generates type identifiers for dynamically generating classes.
 	 *
-	 * @param modifiers  类的修饰符flags描述位集
-	 * @param name       类的全限定名称
-	 * @param superClass 类扩展的超类，这个类应当是可继承的
-	 * @param interfaces 此类要扩展的接口列表
-	 * @throws IllegalArgumentException 若扩展的超类型为final或者不可继承，或者实现的接口中存在非接口类型
+	 * @param modifiers  The modifier flags of the class describe the bit set
+	 * @param name       The fully qualified name of the class
+	 * @param superClass The superclass of class extension should be inheritable
+	 * @param interfaces List of interfaces to be extended for this type
+	 * @throws IllegalArgumentException If the extended supertype is {@code final} or non-inheritable, or if there are non interface types in the implemented interface
 	 */
 	public ClassInfo(int modifiers, String name, ClassInfo<? super T> superClass, ClassInfo<?>... interfaces) {
 		super(name);
@@ -328,7 +376,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 			} else res = arrayType = new ClassInfo<>(this);
 		}
 
-		res.isExistedClass(); //尝试初始化数组类型
+		res.isExistedClass(); // Attempt to initialize array type
 
 		return res;
 	}
@@ -392,11 +440,12 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 使用给出的类生成器构建此类型标识声明的类对象，此类型标识应当是可用的，请参阅{@link ClassInfo#checkGen()}
+	 * Use the provided class generator to construct the class object declared with this type identifier,
+	 * which should be available. Please refer to {@link ClassInfo#checkGen()}
 	 *
-	 * @param generator 用于构建类型使用的类生成器
-	 * @return 构建生成的类对象
-	 * @throws IllegalHandleException 若当前类型标识的状态不可用
+	 * @param generator A class generator used for building types
+	 * @return Build the generated class object
+	 * @throws IllegalHandleException If the current status of the type identifier is unavailable
 	 */
 	public Class<T> generate(AbstractClassGenerator generator) {
 		checkGen();
@@ -480,7 +529,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 			MethodInfo<T, R> method;
 			if (met == null) {
-				method = new MethodInfo<>(this, Modifier.PUBLIC, name, returnType, EMP_ARR, Parameter.trans(args));
+				method = new MethodInfo<>(this, Modifier.PUBLIC, name, returnType, EMP_ARR, ParameterInfo.trans(args));
 			} else {
 				Class<?>[] lis = met.getExceptionTypes();
 				IClass<? extends Throwable>[] thrs = new IClass[lis.length];
@@ -489,7 +538,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 					thrs[i] = (IClass<? extends Throwable>) ClassInfo.asType(lis[i]);
 				}
 
-				method = new MethodInfo<>(this, met.getModifiers(), name, returnType, thrs, Parameter.asParameter(met.getParameters()));
+				method = new MethodInfo<>(this, met.getModifiers(), name, returnType, thrs, ParameterInfo.asParameter(met.getParameters()));
 				method.initAnnotations();
 			}
 
@@ -526,7 +575,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 
 			MethodInfo<?, ?> res;
 			if (cstr == null) {
-				res = new MethodInfo<>(this, Modifier.PUBLIC, INIT, VOID_TYPE, EMP_ARR, Parameter.trans(args));
+				res = new MethodInfo<>(this, Modifier.PUBLIC, INIT, VOID_TYPE, EMP_ARR, ParameterInfo.trans(args));
 			} else {
 				Class<?>[] lis = cstr.getExceptionTypes();
 				IClass<? extends Throwable>[] thrs = new IClass[lis.length];
@@ -535,7 +584,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 					thrs[i] = (IClass<? extends Throwable>) ClassInfo.asType(lis[i]);
 				}
 
-				res = new MethodInfo<>(this, cstr.getModifiers(), INIT, VOID_TYPE, thrs, Parameter.asParameter(cstr.getParameters()));
+				res = new MethodInfo<>(this, cstr.getModifiers(), INIT, VOID_TYPE, thrs, ParameterInfo.asParameter(cstr.getParameters()));
 				res.initAnnotations();
 			}
 
@@ -616,25 +665,25 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 声明一个<cinit>块，返回块体声明对象，若块已存在则返回已存在的块体
+	 * Declare a {@code <clinit>} block and return the block body declaration object. If the block already exists, return the existing block body
 	 *
-	 * @return 静态块的方法体声明对象，若块已存在，则返回其块
-	 * @throws IllegalHandleException 若此类型声明已经生成为类或者是类型标识
+	 * @return The method body of a static block declares an object, and if the block already exists, returns its block
+	 * @throws IllegalHandleException If this type declaration has already been generated as a class or type identifier
 	 */
 	public CodeBlock<Void> declareCinit() {
-		return clinit != null ? clinit : (clinit = declareMethod(Modifier.STATIC, CINIT, VOID_TYPE));
+		return clinit != null ? clinit : (clinit = declareMethod(Modifier.STATIC, CLINIT, VOID_TYPE));
 	}
 
 	/**
-	 * 声明一个构造函数，返回构造函数体声明对象
+	 * Declare a constructor and return the constructor body declaration object.
 	 *
-	 * @param modifiers  此构造函数的修饰符flags标识，不可为static
-	 * @param parameters 构造函数的参数类型标识
-	 * @return 构造函数方法体的声明对象
-	 * @throws IllegalArgumentException 若modifiers是包含static的或者不合法
-	 * @throws IllegalHandleException   若此类型声明已经生成为类或者是类型标识
+	 * @param modifiers  The modifier flags of this constructor cannot be {@code static}
+	 * @param parameters Parameter type identification of constructor
+	 * @return Declaration object of constructor method body
+	 * @throws IllegalArgumentException If modifiers contain {@code static} or are illegal
+	 * @throws IllegalHandleException   If this type declaration has already been generated as a class or type identifier
 	 */
-	public CodeBlock<Void> declareConstructor(int modifiers, Parameter<?>... parameters) {
+	public CodeBlock<Void> declareConstructor(int modifiers, ParameterInfo<?>... parameters) {
 		if (Modifier.isStatic(modifiers))
 			throw new IllegalArgumentException("constructor cannot be static");
 
@@ -642,28 +691,28 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 声明一个方法，并返回方法块的声明对象
+	 * Declare a method and return the declared object of the method block.
 	 *
-	 * @see ClassInfo#declareMethod(int, String, ClassInfo, ClassInfo[], Parameter[])
+	 * @see ClassInfo#declareMethod(int, String, ClassInfo, ClassInfo[], ParameterInfo[])
 	 */
 	@SuppressWarnings("unchecked")
-	public <R> CodeBlock<R> declareMethod(int modifiers, String name, ClassInfo<R> returnType, Parameter<?>... parameters) {
+	public <R> CodeBlock<R> declareMethod(int modifiers, String name, ClassInfo<R> returnType, ParameterInfo<?>... parameters) {
 		return declareMethod(modifiers, name, returnType, new ClassInfo[0], parameters);
 	}
 
 	/**
-	 * 声明一个方法，并返回方法块的声明对象
+	 * Declare a method and return the declared object of the method block.
 	 *
-	 * @param modifiers  方法的修饰符flags标识
-	 * @param name       方法的名称
-	 * @param returnType 方法的返回值类型
-	 * @param parameters 方法参数类型列表
-	 * @param throwsList 方法的抛出异常列表
-	 * @throws IllegalArgumentException 若modifiers不合法
-	 * @throws IllegalHandleException   若此类型声明已经生成为类或者是类型标识
+	 * @param modifiers  The flags of the method
+	 * @param name       Name of Method
+	 * @param returnType The return value type of the method
+	 * @param parameters Method parameter type list
+	 * @param throwsList List of thrown exceptions for methods
+	 * @throws IllegalArgumentException If modifiers are illegal
+	 * @throws IllegalHandleException   If this type declaration has already been generated as a class or type identifier
 	 */
 	@SuppressWarnings("unchecked")
-	public <R> CodeBlock<R> declareMethod(int modifiers, String name, ClassInfo<R> returnType, ClassInfo<? extends Throwable>[] throwsList, Parameter<?>... parameters) {
+	public <R> CodeBlock<R> declareMethod(int modifiers, String name, ClassInfo<R> returnType, ClassInfo<? extends Throwable>[] throwsList, ParameterInfo<?>... parameters) {
 		checkGen();
 		checkModifiers(modifiers, METHOD_ACCESS_MODIFIERS);
 
@@ -671,7 +720,7 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 			throw new IllegalArgumentException("conflicted modifiers " + Modifier.toString(modifiers));
 
 		MethodInfo<T, R> method = (MethodInfo<T, R>) methodMap.computeIfAbsent(
-				pack(name, Arrays.stream(parameters).map(Parameter::getType).toArray(IClass[]::new)),
+				pack(name, Arrays.stream(parameters).map(ParameterInfo::getType).toArray(IClass[]::new)),
 				e -> new MethodInfo<>(this, modifiers, name, returnType, throwsList, parameters));
 		elements.add(method);
 
@@ -679,28 +728,33 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 声明一个字段，若需要给字段赋予默认常量值，则此字段应当为static，否则你应当在此类型的构造函数中初始化对象的成员字段默认值
-	 * <p>分配的默认值只能是下列基本类型或由其构成的数组类型的字面常量
-	 * <pre>{@code
-	 *   Class<?>-> AnyClass
-	 *   Enum<?> -> AnyEnum.object
-	 *   String  -> "anythings"
-	 *   int     -> -2147483648 ~ 2147483647
-	 *   float   -> -3.4028235E38F ~ 3.4028235E38F
-	 *   boolean -> true or false
-	 *   byte    -> -128 ~ 127
-	 *   short   -> -32768 ~ 32767
-	 *   long    -> -9223372036854775808L ~ 9223372036854775807L
-	 *   double  -> -1.7976931348623157E308D ~ 1.7976931348623157E308D
-	 *   char    -> 'u0000' ~ 'uFFFF'
-	 * }</pre>
+	 * Declare a field. If you need to assign a default constant value to the field, it should be static.
+	 * Otherwise, you should initialize the default value of the object's member field in the constructor of
+	 * this type.
+	 * <p>The default values assigned can only be literal constants of the following basic types or array types
+	 * composed of them
+	 * <ul>
+	 *     <li>{@code Class<?>} -> {@code AnyClass}
+	 *     <li>{@code Enum<?>} -> {@code AnyEnum.object}
+	 *     <li>{@code String} -> {@code "anythings"}
+	 *     <li>{@code int} -> {@code -2147483648} ~ {@code 2147483647}
+	 *     <li>{@code float} -> {@code -3.4028235E38F} ~ {@code 3.4028235E38F}
+	 *     <li>{@code boolean} -> {@code true} or {@code false}
+	 *     <li>{@code byte} -> {@code -128} ~ {@code 127}
+	 *     <li>{@code short} -> {@code -32768} ~ {@code 32767}
+	 *     <li>{@code long} -> {@code -9223372036854775808L} ~ {@code 9223372036854775807L}
+	 *     <li>{@code double} -> {@code -1.7976931348623157E308D} ~ {@code 1.7976931348623157E308D}
+	 *     <li>{@code char} -> {@code 'u0000'} ~ {@code 'uFFFF'}
+	 * <ul/>
 	 *
-	 * @param modifiers 字段的修饰符flags标识
-	 * @param name      字段的名称
-	 * @param type      字段的类型
-	 * @param initial   字段的默认初始值，可以为空，只能按规则分配
-	 * @throws IllegalArgumentException 若modifiers不合法或者给出的初始化常量值不合法，请参见{@link ClassInfo#checkModifiers(int, int)}
-	 * @throws IllegalHandleException   若此类型声明已经生成为类或者是类型标识
+	 * @param modifiers Field modifier flags identification
+	 * @param name      Field name
+	 * @param type      Type of field
+	 * @param initial   The default initial value of a field can be empty and can only be assigned according to rules
+	 * @throws IllegalArgumentException If modifiers are invalid or the given initialization constant
+	 *                                  value is invalid, please refer to {@link ClassInfo#checkModifiers(int, int)}
+	 * @throws IllegalHandleException   If this type declaration has already been generated as a class
+	 *                                  or type identifier
 	 */
 	@SuppressWarnings("unchecked")
 	public <F> FieldInfo<F> declareField(int modifiers, String name, ClassInfo<F> type, F initial) {
@@ -718,11 +772,11 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 检查修饰符之间是否存在冲突，以及修饰符是否可用，例如public, protected和private三者只能有其一
+	 * Check for conflicts between modifiers and whether modifiers are available, such as public, protected, and private, which can only have one of them.
 	 *
-	 * @param modifiers 待检查的修饰符
-	 * @param access    可以接收的修饰符位集
-	 * @throws IllegalArgumentException 若修饰符存在冲突或者存在不可接收的修饰符
+	 * @param modifiers Modifiers to be checked
+	 * @param access    Acceptable modifier bit sets
+	 * @throws IllegalArgumentException If there are conflicts or unacceptable modifiers
 	 */
 	private static void checkModifiers(int modifiers, int access) {
 		if (Modifier.isPublic(modifiers) && (modifiers & (Modifier.PROTECTED | Modifier.PRIVATE)) != 0
@@ -738,13 +792,13 @@ public class ClassInfo<T> extends AnnotatedMember implements IClass<T> {
 	}
 
 	/**
-	 * 检查当前类生成状态，若不处于可修改状态则抛出异常，可修改状态应满足以下条件：
+	 * Check the current class generation status. If it is not in a modifiable state, throw an exception. The modifiable state should meet the following conditions:
 	 * <ul>
-	 *   <li><strong>此类型标识不是现有类型标识</strong>
-	 *   <li><strong>此类型标识尚未完成类的生成与类对象加载</strong>
+	 *   <li><strong>This type identifier is not an existing type identifier</strong>
+	 *   <li><strong>This type of identifier has not yet completed class generation and class object loading</strong>
 	 * </ul>
 	 *
-	 * @throws IllegalHandleException 若此类型标识状态不正确
+	 * @throws IllegalHandleException If the identification status of this type is incorrect
 	 */
 	public void checkGen() {
 		if (isExistedClass())

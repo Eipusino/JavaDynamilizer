@@ -56,9 +56,10 @@ import static dynamilize.classmaker.ClassInfo.LONG_TYPE;
 import static dynamilize.classmaker.ClassInfo.STRING_TYPE;
 
 /**
- * 基于ASM字节码操作框架实现的默认类型生成器
+ * Default type generator implemented based on ASM bytecode operation framework.
  *
- * <br><i>该类存在一个尚未修复的性能问题，即对部分可堆栈化的局部变量的优化</i>
+ * <br><i>There is an unresolved performance issue with this class, which is the optimization of partially stackable
+ * local variables.</i>
  *
  * @author EBwilson
  */
@@ -160,7 +161,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 
 		IMethod<?, ?> clinit = null;
 		for (Element element : clazz.elements()) {
-			//<clinit>块的处理最后进行
+			//The processing of the<clinit>block is finally carried out
 			if (element instanceof IMethod<?, ?> method && method.name().equals("<clinit>")) {
 				clinit = method;
 				continue;
@@ -168,7 +169,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 			element.accept(this);
 		}
 
-		//<clinit>初始化静态变量
+		//<clinit>Initialize static variables
 		if (clinit != null) {
 			visitMethod(clinit);
 		}
@@ -234,14 +235,14 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 				);
 			}
 
-			methodVisitor.visitMaxs(0, 0);//已设置自动计算模式，参数无意义
+			methodVisitor.visitMaxs(0, 0);//Automatic calculation mode has been set, parameters are meaningless
 		}
 
-		for (Parameter<?> parameter : method.parameters()) {
+		for (ParameterInfo<?> parameter : method.parameters()) {
 			visitAnnotation(parameter);
 		}
 
-		//在处理clinit块时，初始化静态变量默认值
+		//Initialize static variable default values when processing clinit blocks
 		if (method.name().equals("<clinit>")) {
 			for (Map.Entry<String, Object> entry : staticInitial.entrySet()) {
 				visitConstant(entry.getValue());
@@ -264,18 +265,18 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 			labelMap.put(label, new Label());
 		}
 
-		//if(block.owner().name().equals("<init>") && (!(block.codes().get(0) instanceof IInvoke<?>)
-		//|| !((IInvoke<?>)block.codes().get(0)).method().name().equals("<init>"))){
-		//  block.owner().owner().superClass().getConstructor();
-		//
-		//  methodVisitor.visitMethodInsn(
-		//      INVOKESPECIAL,
-		//      block.owner().owner().superClass().internalName(),
-		//      "<init>",
-		//      "()V",
-		//      false
-		//  );
-		//}
+		/*if (block.owner().name().equals("<init>") && (!(block.codes().get(0) instanceof IInvoke<?>)
+				|| !((IInvoke<?>) block.codes().get(0)).method().name().equals("<init>"))) {
+			block.owner().owner().superClass().getConstructor();
+
+			methodVisitor.visitMethodInsn(
+					INVOKESPECIAL,
+					block.owner().owner().superClass().internalName(),
+					"<init>",
+					"()V",
+					false
+			);
+		}*/
 
 		currCodeBlock = block;
 		for (Element element : block.codes()) {
@@ -606,26 +607,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 
 		IClass<?> componentType = arrayGet.array().type().componentType();
 
-		int loadType;
-		if (componentType == ClassInfo.INT_TYPE) {
-			loadType = Opcodes.IALOAD;
-		} else if (componentType == ClassInfo.FLOAT_TYPE) {
-			loadType = Opcodes.FALOAD;
-		} else if (componentType == ClassInfo.LONG_TYPE) {
-			loadType = Opcodes.LALOAD;
-		} else if (componentType == ClassInfo.DOUBLE_TYPE) {
-			loadType = Opcodes.DALOAD;
-		} else if (componentType == ClassInfo.BYTE_TYPE) {
-			loadType = Opcodes.BALOAD;
-		} else if (componentType == ClassInfo.SHORT_TYPE) {
-			loadType = Opcodes.SALOAD;
-		} else if (componentType == ClassInfo.BOOLEAN_TYPE) {
-			loadType = Opcodes.BALOAD;
-		} else if (componentType == ClassInfo.CHAR_TYPE) {
-			loadType = Opcodes.CALOAD;
-		} else {
-			loadType = Opcodes.AALOAD;
-		}
+		int loadType = loadType(componentType);
 
 		if (!(arrayGet.index() instanceof CodeBlock.StackElem)) {
 			methodVisitor.visitVarInsn(
@@ -643,6 +625,28 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 				getStoreType(componentType),
 				localIndex.get(arrayGet.getTo().name())
 		);
+	}
+
+	private static int loadType(IClass<?> componentType) {
+		if (componentType == ClassInfo.INT_TYPE) {
+			return Opcodes.IALOAD;
+		} else if (componentType == ClassInfo.FLOAT_TYPE) {
+			return Opcodes.FALOAD;
+		} else if (componentType == ClassInfo.LONG_TYPE) {
+			return Opcodes.LALOAD;
+		} else if (componentType == ClassInfo.DOUBLE_TYPE) {
+			return Opcodes.DALOAD;
+		} else if (componentType == ClassInfo.BYTE_TYPE) {
+			return Opcodes.BALOAD;
+		} else if (componentType == ClassInfo.SHORT_TYPE) {
+			return Opcodes.SALOAD;
+		} else if (componentType == ClassInfo.BOOLEAN_TYPE) {
+			return Opcodes.BALOAD;
+		} else if (componentType == ClassInfo.CHAR_TYPE) {
+			return Opcodes.CALOAD;
+		} else {
+			return Opcodes.AALOAD;
+		}
 	}
 
 	@Override
@@ -663,26 +667,7 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 
 		IClass<?> componentType = arrayPut.array().type().componentType();
 
-		int storeType;
-		if (componentType == ClassInfo.INT_TYPE) {
-			storeType = Opcodes.IASTORE;
-		} else if (componentType == ClassInfo.FLOAT_TYPE) {
-			storeType = Opcodes.FASTORE;
-		} else if (componentType == ClassInfo.LONG_TYPE) {
-			storeType = Opcodes.LASTORE;
-		} else if (componentType == ClassInfo.DOUBLE_TYPE) {
-			storeType = Opcodes.DASTORE;
-		} else if (componentType == ClassInfo.BYTE_TYPE) {
-			storeType = Opcodes.BASTORE;
-		} else if (componentType == ClassInfo.SHORT_TYPE) {
-			storeType = Opcodes.SASTORE;
-		} else if (componentType == ClassInfo.BOOLEAN_TYPE) {
-			storeType = Opcodes.BASTORE;
-		} else if (componentType == ClassInfo.CHAR_TYPE) {
-			storeType = Opcodes.CASTORE;
-		} else {
-			storeType = Opcodes.AASTORE;
-		}
+		int storeType = storeType(componentType);
 
 		if (!(arrayPut.value() instanceof CodeBlock.StackElem)) {
 			methodVisitor.visitVarInsn(
@@ -694,6 +679,28 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 		castAssign(arrayPut.value().type(), arrayPut.array().type().componentType());
 
 		methodVisitor.visitInsn(storeType);
+	}
+
+	private static int storeType(IClass<?> componentType) {
+		if (componentType == ClassInfo.INT_TYPE) {
+			return Opcodes.IASTORE;
+		} else if (componentType == ClassInfo.FLOAT_TYPE) {
+			return Opcodes.FASTORE;
+		} else if (componentType == ClassInfo.LONG_TYPE) {
+			return Opcodes.LASTORE;
+		} else if (componentType == ClassInfo.DOUBLE_TYPE) {
+			return Opcodes.DASTORE;
+		} else if (componentType == ClassInfo.BYTE_TYPE) {
+			return Opcodes.BASTORE;
+		} else if (componentType == ClassInfo.SHORT_TYPE) {
+			return Opcodes.SASTORE;
+		} else if (componentType == ClassInfo.BOOLEAN_TYPE) {
+			return Opcodes.BASTORE;
+		} else if (componentType == ClassInfo.CHAR_TYPE) {
+			return Opcodes.CASTORE;
+		} else {
+			return Opcodes.AASTORE;
+		}
 	}
 
 	@Override
@@ -948,8 +955,8 @@ public class ASMGenerator extends AbstractClassGenerator implements Opcodes {
 					annoType.realName(), ret
 			) : element.isType(ElementType.METHOD) || element.isType(ElementType.CONSTRUCTOR) ? methodVisitor.visitAnnotation(
 					annoType.realName(), ret
-			) : element.isType(ElementType.PARAMETER) && element instanceof Parameter<?> ? methodVisitor.visitParameterAnnotation(
-					localIndex.get(((Parameter<?>) element).name()),
+			) : element.isType(ElementType.PARAMETER) && element instanceof ParameterInfo<?> ? methodVisitor.visitParameterAnnotation(
+					localIndex.get(((ParameterInfo<?>) element).name()),
 					annoType.realName(),
 					ret
 			) : null;

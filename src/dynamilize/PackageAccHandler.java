@@ -2,7 +2,7 @@ package dynamilize;
 
 import dynamilize.classmaker.ClassInfo;
 import dynamilize.classmaker.CodeBlock;
-import dynamilize.classmaker.Parameter;
+import dynamilize.classmaker.ParameterInfo;
 import dynamilize.classmaker.code.IClass;
 import dynamilize.classmaker.code.ILocal;
 import dynamilize.classmaker.code.IMethod;
@@ -148,7 +148,7 @@ public abstract class PackageAccHandler {
 						Modifier.PROTECTED,
 						method.getName(),
 						ClassInfo.asType(method.getReturnType()),
-						Parameter.asParameter(method.getParameters())
+						ParameterInfo.asParameter(method.getParameters())
 				);
 
 				ILocal<T> self = code.getThis();
@@ -180,7 +180,7 @@ public abstract class PackageAccHandler {
 
 			IMethod<?, ?> su = superClass.getConstructor(Arrays.stream(constructor.getParameterTypes()).map(ClassInfo::asType).toArray(IClass[]::new));
 
-			CodeBlock<?> code = res.declareConstructor(Modifier.PUBLIC, Parameter.asParameter(constructor.getParameters()));
+			CodeBlock<?> code = res.declareConstructor(Modifier.PUBLIC, ParameterInfo.asParameter(constructor.getParameters()));
 			code.invoke(code.getThis(), su, null, code.getParamList().toArray(A));
 		}
 
